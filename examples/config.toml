@@ -1,0 +1,7 @@
+rss = "https://mikanani.me/RSS/MyBangumi?token=token"
+interval = 500
+
+[qq]
+api = "http://localhost:8000"
+dms = [114514, 1919810]
+groups = [114514, 1919810]
