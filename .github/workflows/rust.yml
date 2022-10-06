@@ -1,0 +1,29 @@
+name: "Check clippy and toml"
+on: [push, pull_request]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: nightly
+            components: clippy
+            override: true
+
+      - name: Check clippy
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features
+          
+      - name: Check toml 
+        run: |
+          wget https://github.com/tamasfe/taplo/releases/latest/download/taplo-x86_64-unknown-linux-gnu.tar.gz
+          tar -xvf taplo-x86_64-unknown-linux-gnu.tar.gz
+          chmod +x taplo
+          ./taplo fmt --check
+
+  
