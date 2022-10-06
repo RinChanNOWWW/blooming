@@ -1,8 +1,12 @@
 #![feature(try_blocks)]
 
+use std::env::current_dir;
+use std::fs::File;
+use std::path::PathBuf;
 use std::time;
 
 use chrono::Local;
+use daemonize::Daemonize;
 use log::error;
 use log::info;
 use mikan_notifier::mikan;
@@ -77,5 +81,22 @@ fn main() -> Result<()> {
     pretty_env_logger::init();
     let config = Config::load()?;
     info!("Starting Mikan Notifier with config: {:?}", config);
+
+    if config.daemonize {
+        let current_dir = current_dir()?;
+        let log_file = PathBuf::from(format!("{}/mikan-notifier.log", current_dir.display()));
+        let pid_file = PathBuf::from(format!("{}/mikan-notifier.pid", current_dir.display()));
+
+        let stdout = File::create(log_file.clone())?;
+        let stderr = File::create(log_file)?;
+        let daemon = Daemonize::new()
+            .pid_file(pid_file)
+            .working_directory(current_dir)
+            .stdout(stdout)
+            .stderr(stderr);
+
+        daemon.start()?;
+    }
+
     run(config)
 }

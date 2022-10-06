@@ -28,6 +28,9 @@ pub struct Config {
     #[clap(long, short = 'c', default_value = "config.toml")]
     pub config_file: String,
 
+    #[clap(long, short = 'd', action, default_value_t)]
+    pub daemonize: bool,
+
     // mikan rss link.
     #[clap(long, default_value_t)]
     pub rss: String,
