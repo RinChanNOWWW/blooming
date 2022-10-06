@@ -60,7 +60,6 @@ fn run(config: Config) -> Result<()> {
 
         let result: Result<()> = try {
             let items = get_new_items(&config.rss)?;
-            notifer.notify(&items)?;
             let new_items = items
                 .into_iter()
                 .filter(|item| item.pub_date > last_update)
@@ -82,11 +81,8 @@ fn run(config: Config) -> Result<()> {
             }
         };
 
-        match result {
-            Ok(_) => {}
-            Err(e) => {
-                error!("{}", e);
-            }
+        if let Err(e) = result {
+            error!("{}", e);
         }
     }
 }
