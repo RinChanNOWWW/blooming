@@ -56,6 +56,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
+name = "bloom"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "clap",
+ "daemonize",
+ "log",
+ "pretty_env_logger",
+ "reqwest",
+ "serde",
+ "serde-xml-rs",
+ "serfig",
+]
+
+[[package]]
 name = "boxfnonce"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -483,22 +499,6 @@ name = "memchr"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
-
-[[package]]
-name = "mikan-notifier"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "clap",
- "daemonize",
- "log",
- "pretty_env_logger",
- "reqwest",
- "serde",
- "serde-xml-rs",
- "serfig",
-]
 
 [[package]]
 name = "mime"

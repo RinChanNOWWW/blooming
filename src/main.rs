@@ -19,16 +19,16 @@ use std::fs::File;
 use std::path::PathBuf;
 use std::time;
 
+use bloom::mikan;
+use bloom::mikan::stringify_items;
+use bloom::mikan::Item;
+use bloom::notifier;
+use bloom::Config;
+use bloom::Result;
 use chrono::Local;
 use daemonize::Daemonize;
 use log::error;
 use log::info;
-use mikan_notifier::mikan;
-use mikan_notifier::mikan::stringify_items;
-use mikan_notifier::mikan::Item;
-use mikan_notifier::notifier;
-use mikan_notifier::Config;
-use mikan_notifier::Result;
 
 fn get_new_items(rss: &str) -> Result<Vec<Item>> {
     let rss_content = mikan::rss::get_rss_content(rss)?;
@@ -94,8 +94,8 @@ fn main() -> Result<()> {
 
     if config.daemonize {
         let current_dir = current_dir()?;
-        let log_file = PathBuf::from(format!("{}/mikan-notifier.log", current_dir.display()));
-        let pid_file = PathBuf::from(format!("{}/mikan-notifier.pid", current_dir.display()));
+        let log_file = PathBuf::from(format!("{}/bloom.log", current_dir.display()));
+        let pid_file = PathBuf::from(format!("{}/bloom.pid", current_dir.display()));
 
         let stdout = File::create(log_file.clone())?;
         let stderr = File::create(log_file)?;

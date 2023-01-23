@@ -1,16 +1,22 @@
-# MIKAN NOTIFIER
+# bloom
 
-番剧更新通知器。
+BT/PT 站 RSS 更新通知器。
 
-- RSS 订阅: [蜜柑计划](https://mikanani.me/)
-- QQ 机器人通知: [go-cqhttp](https://github.com/Mrs4s/go-cqhttp).
+## 支持的站点
+
+- [蜜柑计划](https://mikanani.me/)
+- TODO: [BYRBT](https://byr.pt/)
+
+## 通知方式
+
+- QQ 机器人: [go-cqhttp](https://github.com/Mrs4s/go-cqhttp).
 
 ## 使用
 
 ```bash
-./mikan-notifier -c config.toml
+./bloom -c config.toml
 
 # or
 
-./mikan-notifier -c config.toml -d # daemon mode
+./bloom -c config.toml -d # daemon mode
 ```
