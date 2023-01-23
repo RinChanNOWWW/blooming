@@ -1,5 +1,5 @@
 name: "Check clippy and toml"
-on: [push, pull_request]
+on: [pull_request]
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -21,9 +21,9 @@ jobs:
           
       - name: Check toml 
         run: |
-          wget https://github.com/tamasfe/taplo/releases/latest/download/taplo-x86_64-unknown-linux-gnu.tar.gz
-          tar -xvf taplo-x86_64-unknown-linux-gnu.tar.gz
-          chmod +x taplo
-          ./taplo fmt --check
+          wget https://github.com/tamasfe/taplo/releases/download/0.8.0/taplo-linux-x86_64.gz
+          gunzip taplo-linux-x86_64.gz
+          chmod +x taplo-linux-x86_64
+          ./taplo-linux-x86_64 fmt --check
 
   
