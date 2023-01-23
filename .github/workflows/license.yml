@@ -1,5 +1,5 @@
 name: "Check License Lines"
-on: [push, pull_request]
+on: [pull_request]
 jobs:
   license:
     runs-on: ubuntu-latest
