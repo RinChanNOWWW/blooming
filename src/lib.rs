@@ -18,5 +18,6 @@ pub mod source;
 
 pub use config::*;
 pub use notifier::*;
+pub use source::*;
 
 pub type Result<T> = anyhow::Result<T>;
