@@ -12,14 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::fmt::Display;
-
 use chrono::DateTime;
 use chrono::Local;
 
-use self::rss::MikanRSSItem;
-
-pub mod rss;
+use super::rss::MikanRSSItem;
+use crate::Notifyable;
 
 #[derive(Clone)]
 pub struct Item {
@@ -40,14 +37,11 @@ impl From<MikanRSSItem> for Item {
     }
 }
 
-impl Display for Item {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} ({})", self.title, self.pub_date)
+impl Notifyable for Item {
+    fn content(&self) -> String {
+        self.title.clone()
     }
-}
-
-pub fn stringify_items(items: &[Item]) -> String {
-    items
-        .iter()
-        .fold(String::from(""), |acc, item| format!("{}\n{}", acc, item))
+    fn pub_time(&self) -> DateTime<Local> {
+        self.pub_date
+    }
 }

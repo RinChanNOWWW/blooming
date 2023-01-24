@@ -12,6 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod qq;
+use super::mikan::MikanSource;
+use super::SourcePtr;
+use crate::Config;
 
-pub use qq::*;
+pub fn register(factory: &mut SourceFactory, config: &Config) {
+    if let Some(config) = &config.mikan {
+        factory.register(MikanSource::create(config))
+    }
+}
+
+#[derive(Default)]
+pub struct SourceFactory {
+    sources: Vec<SourcePtr>,
+}
+
+impl SourceFactory {
+    pub fn register(&mut self, source: SourcePtr) {
+        self.sources.push(source);
+    }
+
+    pub fn sources(&self) -> &Vec<SourcePtr> {
+        &self.sources
+    }
+}
