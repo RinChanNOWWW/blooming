@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use super::byrbt::ByrbtSource;
 use super::mikan::MikanSource;
 use super::SourcePtr;
 use crate::Config;
@@ -19,6 +20,9 @@ use crate::Config;
 pub fn register(factory: &mut SourceFactory, config: &Config) {
     if let Some(config) = &config.mikan {
         factory.register(MikanSource::create(config))
+    }
+    if let Some(config) = &config.byrbt {
+        factory.register(ByrbtSource::create(config));
     }
 }
 

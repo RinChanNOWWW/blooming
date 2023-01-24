@@ -75,13 +75,13 @@ fn run(source: SourcePtr, notifier: Arc<QQNotifier>) {
             let items = source.pull_items()?;
             let new_items = items
                 .into_iter()
-                .filter(|item| item.pub_time() > last_update)
+                .filter(|item| item.pub_date > last_update)
                 .collect::<Vec<_>>();
 
             if !new_items.is_empty() {
                 // update the time marker
-                last_update = new_items.iter().fold(new_items[0].pub_time(), |acc, item| {
-                    let pub_time = item.pub_time();
+                last_update = new_items.iter().fold(new_items[0].pub_date, |acc, item| {
+                    let pub_time = item.pub_date;
                     if pub_time > acc { pub_time } else { acc }
                 });
 

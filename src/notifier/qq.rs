@@ -14,14 +14,13 @@
 
 use std::sync::Arc;
 
-use chrono::DateTime;
-use chrono::Local;
 use log::error;
 use log::info;
 use reqwest::blocking::Client;
 use serde::Deserialize;
 use serde::Serialize;
 
+use crate::source::Item;
 use crate::Result;
 
 #[derive(Clone)]
@@ -48,15 +47,6 @@ struct GroupMsg {
     message: String,
 }
 
-pub trait Notifyable: Send + Sync {
-    /// The content to notify.
-    fn content(&self) -> String;
-    /// When this item published
-    fn pub_time(&self) -> DateTime<Local>;
-}
-
-pub type NotifyableItem = Arc<dyn Notifyable>;
-
 impl Notifier {
     pub fn new(api: String, dms: Vec<u64>, groups: Vec<u64>) -> Self {
         Self {
@@ -75,7 +65,7 @@ impl QQNotifier {
         }
     }
 
-    pub fn notify(&self, source: &str, items: Vec<NotifyableItem>) -> Result<()> {
+    pub fn notify(&self, source: &str, items: Vec<Item>) -> Result<()> {
         let mut handles = Vec::new();
 
         {
@@ -84,7 +74,7 @@ impl QQNotifier {
             let source = source.to_string();
             let dms_handle = std::thread::spawn(move || {
                 for item in pm_items.iter() {
-                    let msg = format!("{}:\n{} ({})", source, item.content(), item.pub_time());
+                    let msg = format!("{}:\n{} ({})", source, item.title, item.pub_date);
                     if let Err(e) = Self::send_private_msg(notifier.clone(), msg) {
                         error!("Send private msg failed: {}", e);
                     }
@@ -95,11 +85,11 @@ impl QQNotifier {
 
         {
             let notifier = self.inner.clone();
-            let gp_items = items.clone();
+            let gp_items = items;
             let source = source.to_string();
             let groups_handle = std::thread::spawn(move || {
                 for item in gp_items.iter() {
-                    let msg = format!("{}:\n{} ({})", source, item.content(), item.pub_time());
+                    let msg = format!("{}:\n{} ({})", source, item.title, item.pub_date);
                     if let Err(e) = Self::send_group_msg(notifier.clone(), msg) {
                         error!("Send group msg failed: {}", e);
                     }

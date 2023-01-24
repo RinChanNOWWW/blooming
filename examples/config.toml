@@ -2,6 +2,11 @@
 rss = "https://mikanani.me/RSS/MyBangumi?token=token"
 interval = 500
 
+[byrbt]
+# support multiple rss-es.
+rsses = ["https://byr.pt/torrentrss.php?passkey=xxx", "https://byr.pt/torrentrss.php?passkey=xxx"]
+interval = 500
+
 [qq]
 api = "http://localhost:8000"
 dms = [114514, 1919810]
