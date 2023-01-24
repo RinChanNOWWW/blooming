@@ -13,8 +13,8 @@
 // limitations under the License.
 
 mod config;
-pub mod mikan;
 pub mod notifier;
+pub mod source;
 
 pub use config::*;
 pub use notifier::*;

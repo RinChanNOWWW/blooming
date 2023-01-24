@@ -12,6 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod qq;
+mod byrbt;
+mod factory;
+mod mikan;
 
-pub use qq::*;
+use std::sync::Arc;
+use std::time::Duration;
+
+pub use factory::*;
+
+use crate::NotifyableItem;
+use crate::Result;
+
+pub trait Source: Send + Sync {
+    /// The name of the source. Eg. mikan, byrbt.
+    fn name(&self) -> String;
+    /// Pull items from the source.
+    fn pull_items(&self) -> Result<Vec<NotifyableItem>>;
+    /// The time interval between two pulls.
+    fn interval(&self) -> Duration;
+}
+
+pub type SourcePtr = Arc<dyn Source>;

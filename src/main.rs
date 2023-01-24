@@ -17,67 +17,76 @@
 use std::env::current_dir;
 use std::fs::File;
 use std::path::PathBuf;
-use std::time;
+use std::sync::Arc;
 
-use bloom::mikan;
-use bloom::mikan::stringify_items;
-use bloom::mikan::Item;
 use bloom::notifier;
+use bloom::source::register;
+use bloom::source::SourceFactory;
+use bloom::source::SourcePtr;
+use bloom::ClapConfig;
 use bloom::Config;
+use bloom::QQNotifier;
 use bloom::Result;
 use chrono::Local;
+use clap::Parser;
 use daemonize::Daemonize;
 use log::error;
 use log::info;
 
-fn get_new_items(rss: &str) -> Result<Vec<Item>> {
-    let rss_content = mikan::rss::get_rss_content(rss)?;
-
-    Ok(rss_content
-        .channel
-        .items
-        .into_iter()
-        .map(Item::from)
-        .collect::<Vec<_>>())
-}
-
-fn run(config: Config) -> Result<()> {
+fn main_impl(config: Config) -> Result<()> {
     let qq_conf = &config.qq;
-    let notifer = notifier::QQNotifer::new(
+    let notifier = notifier::QQNotifier::new(
         qq_conf.api.clone(),
         qq_conf.dms.clone(),
         qq_conf.groups.clone(),
     );
 
-    // Firstly, intialize the global state
-    let items = get_new_items(&config.rss)?;
-    info!("Current items:\n{}", stringify_items(&items));
+    let mut factory = SourceFactory::default();
+    register(&mut factory, &config);
 
+    activate_sources(factory, Arc::new(notifier))
+}
+
+fn activate_sources(factory: SourceFactory, notifier: Arc<QQNotifier>) -> Result<()> {
+    let sources = factory.sources();
+    let handles = sources
+        .iter()
+        .map(|source| {
+            let source = source.clone();
+            let n = notifier.clone();
+            std::thread::spawn(move || run(source, n))
+        })
+        .collect::<Vec<_>>();
+
+    for handle in handles {
+        handle.join().unwrap();
+    }
+    Ok(())
+}
+
+fn run(source: SourcePtr, notifier: Arc<QQNotifier>) {
     let mut last_update = Local::now();
+    let interval = source.interval();
 
     loop {
-        std::thread::sleep(time::Duration::from_secs(config.interval));
+        std::thread::sleep(interval);
 
         let result: Result<()> = try {
-            let items = get_new_items(&config.rss)?;
+            let items = source.pull_items()?;
             let new_items = items
                 .into_iter()
-                .filter(|item| item.pub_date > last_update)
+                .filter(|item| item.pub_time() > last_update)
                 .collect::<Vec<_>>();
 
             if !new_items.is_empty() {
-                info!("New items:\n{}", stringify_items(&new_items));
-                // notify by qq bot
-                notifer.notify(&new_items)?;
-
                 // update the time marker
-                last_update = new_items.iter().fold(new_items[0].pub_date, |acc, item| {
-                    if item.pub_date > acc {
-                        item.pub_date
-                    } else {
-                        acc
-                    }
+                last_update = new_items.iter().fold(new_items[0].pub_time(), |acc, item| {
+                    let pub_time = item.pub_time();
+                    if pub_time > acc { pub_time } else { acc }
                 });
+
+                // notify by qq bot
+                notifier.notify(&source.name(), new_items)?;
             }
         };
 
@@ -89,10 +98,13 @@ fn run(config: Config) -> Result<()> {
 
 fn main() -> Result<()> {
     pretty_env_logger::init();
-    let config = Config::load()?;
+
+    let args = ClapConfig::parse();
+
+    let config = Config::load(&args.config_file)?;
     info!("Starting Mikan Notifier with config: {:?}", config);
 
-    if config.daemonize {
+    if args.daemonize {
         let current_dir = current_dir()?;
         let log_file = PathBuf::from(format!("{}/bloom.log", current_dir.display()));
         let pid_file = PathBuf::from(format!("{}/bloom.pid", current_dir.display()));
@@ -108,5 +120,5 @@ fn main() -> Result<()> {
         daemon.start()?;
     }
 
-    run(config)
+    main_impl(config)
 }

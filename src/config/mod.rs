@@ -16,35 +16,42 @@ use clap::Parser;
 use serde::Deserialize;
 use serde::Serialize;
 use serfig::collectors::from_file;
-use serfig::collectors::from_self;
 
 use crate::Result;
 
-#[derive(Debug, Default, Serialize, Deserialize, Parser)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct QQBotConfig {
-    // go-cqhttp HTTP api. like: http://qqbot.me
-    #[clap(long, default_value_t)]
+    /// go-cqhttp HTTP api. like: http://qqbot.me
     pub api: String,
-
-    // qq personal contacts
-    #[clap(long)]
+    /// qq personal contacts
     pub dms: Vec<u64>,
-
-    // qq groups
-    #[clap(long)]
+    /// qq groups
     pub groups: Vec<u64>,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Config {
+    /// config of qq bot.
+    pub qq: QQBotConfig,
+    /// mikan
+    pub mikan: Option<MikanConfig>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, Parser)]
 #[serde(default)]
-pub struct Config {
+pub struct ClapConfig {
     #[clap(long, short = 'c', default_value = "config.toml")]
     pub config_file: String,
 
     #[clap(long, short = 'd', action, default_value_t)]
     pub daemonize: bool,
+}
 
+#[derive(Debug, Default, Serialize, Deserialize, Parser)]
+#[serde(default)]
+pub struct MikanConfig {
     // mikan rss link.
     #[clap(long, default_value_t)]
     pub rss: String,
@@ -52,21 +59,12 @@ pub struct Config {
     // Time interval for checking rss.
     #[clap(long, default_value_t)]
     pub interval: u64,
-
-    // config of qq bot.
-    #[clap(flatten)]
-    pub qq: QQBotConfig,
 }
 
 impl Config {
-    pub fn load() -> Result<Self> {
-        let arg_conf = Self::parse();
+    pub fn load(file: &str) -> Result<Self> {
         let mut builder = serfig::Builder::default();
-
-        builder = builder.collect(from_file(serfig::parsers::Toml, &arg_conf.config_file));
-
-        builder = builder.collect(from_self(arg_conf));
-
+        builder = builder.collect(from_file(serfig::parsers::Toml, file));
         builder.build()
     }
 }

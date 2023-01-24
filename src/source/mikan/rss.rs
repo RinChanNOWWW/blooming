@@ -12,11 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use reqwest;
 use serde::Deserialize;
 use serde::Serialize;
-
-use crate::Result;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct MikanRSSContent {
@@ -48,11 +45,4 @@ pub struct Torrent {
     pub content_length: String,
     #[serde(rename = "pubDate")]
     pub pub_date: String,
-}
-
-pub fn get_rss_content(url: &str) -> Result<MikanRSSContent> {
-    let resp = reqwest::blocking::get(url)?;
-    let rss = resp.text()?;
-    let rss = serde_xml_rs::from_str(&rss)?;
-    Ok(rss)
 }
