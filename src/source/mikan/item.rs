@@ -12,36 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use chrono::DateTime;
-use chrono::Local;
+use serde::Deserialize;
+use serde::Serialize;
 
-use super::rss::MikanRSSItem;
-use crate::Notifyable;
+#[derive(Debug, Deserialize, Serialize)]
+pub struct MikanRSSContent {
+    pub channel: Channel,
+}
 
-#[derive(Clone)]
-pub struct Item {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Channel {
     pub title: String,
-    pub pub_date: DateTime<Local>,
+    pub link: String,
+    pub description: String,
+    #[serde(rename = "item")]
+    pub items: Vec<MikanRSSItem>,
 }
 
-impl From<MikanRSSItem> for Item {
-    fn from(item: MikanRSSItem) -> Self {
-        let mut date = item.torrent.pub_date.clone();
-        date.push_str("+08:00");
-        let pub_date = DateTime::parse_from_rfc3339(&date).unwrap();
-        let pub_date = pub_date.with_timezone(&Local {});
-        Item {
-            title: item.title,
-            pub_date,
-        }
-    }
+#[derive(Debug, Deserialize, Serialize)]
+pub struct MikanRSSItem {
+    pub guid: String,
+    pub link: String,
+    pub title: String,
+    pub description: String,
+    pub torrent: Torrent,
 }
 
-impl Notifyable for Item {
-    fn content(&self) -> String {
-        self.title.clone()
-    }
-    fn pub_time(&self) -> DateTime<Local> {
-        self.pub_date
-    }
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Torrent {
+    pub link: String,
+    #[serde(rename = "contentLength")]
+    pub content_length: String,
+    #[serde(rename = "pubDate")]
+    pub pub_date: String,
 }

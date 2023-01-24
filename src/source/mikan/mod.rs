@@ -13,9 +13,7 @@
 // limitations under the License.
 
 mod item;
-mod rss;
 mod source;
 
-pub use item::Item;
-pub use rss::*;
+pub use item::MikanRSSItem;
 pub use source::MikanSource;

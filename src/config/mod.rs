@@ -37,27 +37,37 @@ pub struct Config {
     pub qq: QQBotConfig,
     /// mikan
     pub mikan: Option<MikanConfig>,
+    /// byrbt
+    pub byrbt: Option<ByrbtConfig>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, Parser)]
 #[serde(default)]
 pub struct ClapConfig {
-    #[clap(long, short = 'c', default_value = "config.toml")]
+    #[clap(long, short = 'c', required = true)]
     pub config_file: String,
 
     #[clap(long, short = 'd', action, default_value_t)]
     pub daemonize: bool,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize, Parser)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct MikanConfig {
     // mikan rss link.
-    #[clap(long, default_value_t)]
     pub rss: String,
 
     // Time interval for checking rss.
-    #[clap(long, default_value_t)]
+    pub interval: u64,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
+pub struct ByrbtConfig {
+    // rss links
+    pub rsses: Vec<String>,
+
+    // Time interval for checking rss.
     pub interval: u64,
 }
 

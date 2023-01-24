@@ -15,30 +15,30 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use super::item::MikanRSSContent;
+use super::item::ByrbtRSSContent;
 use crate::source::Item;
 use crate::source::Source;
 use crate::source::SourcePtr;
-use crate::MikanConfig;
+use crate::ByrbtConfig;
 use crate::Result;
 
-pub struct MikanSource {
-    rss: String,
+pub struct ByrbtSource {
+    rsses: Vec<String>,
     interval: Duration,
 }
 
-impl MikanSource {
-    pub fn create(config: &MikanConfig) -> SourcePtr {
+impl ByrbtSource {
+    pub fn create(config: &ByrbtConfig) -> SourcePtr {
         Arc::new(Self {
-            rss: config.rss.clone(),
+            rsses: config.rsses.clone(),
             interval: Duration::from_secs(config.interval),
         })
     }
 }
 
-impl Source for MikanSource {
+impl Source for ByrbtSource {
     fn name(&self) -> String {
-        "Mikan".to_string()
+        "BYRBT".to_string()
     }
 
     fn interval(&self) -> Duration {
@@ -46,15 +46,23 @@ impl Source for MikanSource {
     }
 
     fn pull_items(&self) -> Result<Vec<Item>> {
-        let resp = reqwest::blocking::get(&self.rss)?;
-        let content = resp.text()?;
-        let content: MikanRSSContent = serde_xml_rs::from_str(&content)?;
+        let contents = self
+            .rsses
+            .iter()
+            .map(|rss| {
+                let resp = reqwest::blocking::get(rss)?;
+                let content = resp.text()?;
+                let content: ByrbtRSSContent = serde_xml_rs::from_str(&content)?;
+                Ok(content)
+            })
+            .collect::<Result<Vec<_>>>()?;
 
-        Ok(content
-            .channel
-            .items
+        let items = contents
             .into_iter()
+            .flat_map(|content| content.channel.items)
             .map(Item::from)
-            .collect::<Vec<_>>())
+            .collect::<Vec<_>>();
+
+        Ok(items)
     }
 }

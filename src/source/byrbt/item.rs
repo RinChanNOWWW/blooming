@@ -16,7 +16,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct MikanRSSContent {
+pub struct ByrbtRSSContent {
     pub channel: Channel,
 }
 
@@ -25,24 +25,39 @@ pub struct Channel {
     pub title: String,
     pub link: String,
     pub description: String,
+    pub language: String,
+    pub copyright: String,
+    #[serde(rename = "managingEditor")]
+    pub managing_editor: String,
+    #[serde(rename = "webMaster")]
+    pub web_master: String,
+    #[serde(rename = "pubDate")]
+    pub pub_date: String,
+    pub generator: String,
+    pub docs: String,
     #[serde(rename = "item")]
-    pub items: Vec<MikanRSSItem>,
+    pub items: Vec<ByrbtRSSItem>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct MikanRSSItem {
-    pub guid: String,
-    pub link: String,
+pub struct Image {
+    pub url: String,
     pub title: String,
+    pub link: String,
+    pub width: String,
+    pub height: String,
     pub description: String,
-    pub torrent: Torrent,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Torrent {
+pub struct ByrbtRSSItem {
+    pub title: String,
     pub link: String,
-    #[serde(rename = "contentLength")]
-    pub content_length: String,
+    pub description: String,
+    pub author: String,
+    pub category: String,
+    pub comments: String,
+    pub guid: String,
     #[serde(rename = "pubDate")]
     pub pub_date: String,
 }

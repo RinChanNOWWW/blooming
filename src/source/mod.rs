@@ -14,21 +14,23 @@
 
 mod byrbt;
 mod factory;
+mod item;
 mod mikan;
 
 use std::sync::Arc;
 use std::time::Duration;
 
-pub use factory::*;
+pub use factory::register;
+pub use factory::SourceFactory;
+pub use item::Item;
 
-use crate::NotifyableItem;
 use crate::Result;
 
 pub trait Source: Send + Sync {
     /// The name of the source. Eg. mikan, byrbt.
     fn name(&self) -> String;
     /// Pull items from the source.
-    fn pull_items(&self) -> Result<Vec<NotifyableItem>>;
+    fn pull_items(&self) -> Result<Vec<Item>>;
     /// The time interval between two pulls.
     fn interval(&self) -> Duration;
 }
