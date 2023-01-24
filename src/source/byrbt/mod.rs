@@ -15,5 +15,5 @@
 mod item;
 mod source;
 
-pub use item::ByrbtRSSItem;
+pub use item::*;
 pub use source::ByrbtSource;
