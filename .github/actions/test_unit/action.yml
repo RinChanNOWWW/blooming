@@ -1,0 +1,15 @@
+name: "Test unit"
+description: "Running unit tests"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+          toolchain: nightly
+          override: true
+        
+    - name: unit test
+      shell: bash
+      run: cargo test

@@ -1,0 +1,36 @@
+name: "Check"
+description: "Check will do all essential checks"
+inputs:
+  github_token:
+    description: "Github Token"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Check License Header
+      uses: apache/skywalking-eyes/header@main
+      with:
+        mode: check
+
+    - name: Check toml 
+      shell: bash
+      run: |
+        wget https://github.com/tamasfe/taplo/releases/download/0.8.0/taplo-linux-x86_64.gz
+        gunzip taplo-linux-x86_64.gz
+        chmod +x taplo-linux-x86_64
+        ./taplo-linux-x86_64 fmt --check
+
+    - name: Setup toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+          toolchain: nightly
+          components: clippy
+          override: true
+
+    - name: Check clippy
+      uses: actions-rs/clippy-check@v1
+      with:
+        token: ${{ inputs.github_token }}
+        args: --all-features
+

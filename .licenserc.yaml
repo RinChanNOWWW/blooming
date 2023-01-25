@@ -1,0 +1,33 @@
+header:
+  license:
+    spdx-id: Apache-2.0
+    copyright-owner: RinChanNOWWW
+  paths-ignore:
+    - "target"
+    - exmaples
+    - "scripts"
+    - "tools"
+    - ".cargo"
+    - ".github"
+    - ".gitignore"
+    - ".gitattributes"
+    # Ignore LICENSE and Makefile
+    - "LICENSE"
+    - "Makefile"
+    # Ignore docs and generated files
+    - "**/*.md"
+    - "**/*.hbs"
+    - "**/*.template"
+    - "**/*.cue"
+    - "**/*.json"
+    - "**/*.sql"
+    - "**/*.proto"
+    - "**/*.yml"
+    - "**/*.yaml"
+    - "**/*.toml"
+    - "**/*.lock"
+    - "**/*.yapf"
+    - "**/*.test"
+    - "**/*.xml"
+
+  comment: on-failure
