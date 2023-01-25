@@ -6,6 +6,7 @@ BT/PT 站 RSS 更新通知器。
 
 - [蜜柑计划](https://mikanani.me/)
 - [BYRBT](https://byr.pt/)
+- [北洋园PT](https://tjupt.org/)
 
 ## 通知方式
 

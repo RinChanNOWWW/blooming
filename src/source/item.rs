@@ -17,6 +17,7 @@ use chrono::Local;
 
 use super::byrbt::ByrbtRSSItem;
 use super::mikan::MikanRSSItem;
+use super::tjupt::TjuptRSSItem;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Item {
@@ -39,6 +40,17 @@ impl From<MikanRSSItem> for Item {
 
 impl From<ByrbtRSSItem> for Item {
     fn from(item: ByrbtRSSItem) -> Self {
+        let pub_date = DateTime::parse_from_rfc2822(&item.pub_date).unwrap();
+        let pub_date = pub_date.with_timezone(&Local {});
+        Item {
+            title: item.title,
+            pub_date,
+        }
+    }
+}
+
+impl From<TjuptRSSItem> for Item {
+    fn from(item: TjuptRSSItem) -> Self {
         let pub_date = DateTime::parse_from_rfc2822(&item.pub_date).unwrap();
         let pub_date = pub_date.with_timezone(&Local {});
         Item {
