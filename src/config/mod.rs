@@ -39,6 +39,8 @@ pub struct Config {
     pub mikan: Option<MikanConfig>,
     /// byrbt
     pub byrbt: Option<ByrbtConfig>,
+    /// tjupt
+    pub tjupt: Option<TjuptConfig>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, Parser)]
@@ -64,6 +66,16 @@ pub struct MikanConfig {
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct ByrbtConfig {
+    // rss links
+    pub rsses: Vec<String>,
+
+    // Time interval for checking rss.
+    pub interval: u64,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+#[serde(default)]
+pub struct TjuptConfig {
     // rss links
     pub rsses: Vec<String>,
 

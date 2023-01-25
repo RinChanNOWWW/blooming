@@ -7,6 +7,11 @@ interval = 500
 rsses = ["https://byr.pt/torrentrss.php?passkey=xxx", "https://byr.pt/torrentrss.php?passkey=xxx"]
 interval = 500
 
+[tjupt]
+# support multiple rss-es.
+rsses = ["https://www.tjupt.org/torrentrss.php?rows=10&cat402=1&icat=1&ismalldescr=1&isize=1&iuplder=1&passkey="]
+interval = 500
+
 [qq]
 api = "http://localhost:8000"
 dms = [114514, 1919810]

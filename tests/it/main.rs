@@ -18,6 +18,7 @@ use bloom::ByrbtRSSContent;
 use bloom::Item;
 use bloom::MikanRSSContent;
 use bloom::Result;
+use bloom::TjuptRSSContent;
 use chrono::DateTime;
 use chrono::Local;
 
@@ -74,6 +75,31 @@ fn test_parse_byrbt() -> Result<()> {
         title: "[大陆][三体][Three.Body.S01.2023.2160p.DV.WEB-DL.H265.DDP5.1.Atmos-CHDWEB][E10-E11][MP4]"
             .to_string(),
         pub_date: DateTime::parse_from_rfc2822("Tue, 24 Jan 2023 20:21:43 +0800")
+            .unwrap()
+            .with_timezone(&Local {}),
+    }];
+
+    assert_eq!(items, expected);
+
+    Ok(())
+}
+
+#[test]
+fn test_parse_tjubt() -> Result<()> {
+    let file = File::open("tests/it/testdata/tjupt.xml")?;
+    let content: TjuptRSSContent = serde_xml_rs::from_reader(file)?;
+
+    let items = content
+        .channel
+        .items
+        .into_iter()
+        .map(Item::from)
+        .collect::<Vec<_>>();
+    let expected =
+        vec![Item {
+        title: "[电影][意大利/法国][阿玛柯德][Amarcord.1973.Criterion.Collection.1080p.BluRay.x264-WiKi][阿玛柯德/我记得/想当年(港)/阿玛珂德(台)][14.10GiB]"
+            .to_string(),
+        pub_date: DateTime::parse_from_rfc2822("Mon, 03 May 2021 05:35:49 +0000")
             .unwrap()
             .with_timezone(&Local {}),
     }];
