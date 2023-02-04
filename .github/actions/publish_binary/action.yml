@@ -1,0 +1,23 @@
+name: "Publish Binary"
+description: "Publish releases binaries"
+inputs:
+  github_token:
+    description: "Github token"
+    required: true
+  version:
+    description: "Release version"
+    required: true
+  target:
+    description: "Release target"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Update release to github
+      shell: bash
+      # Reference: https://cli.github.com/manual/gh_release_upload
+      run: gh release upload ${{ inputs.version }} bloom-${{ inputs.version }}-${{ inputs.target }} --clobber
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+
