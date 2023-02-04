@@ -153,6 +153,10 @@ jobs:
             toolchain: nightly
             components: clippy
             override: true
+      - name: Cross setup
+        if: matrix.arch == 'aarch64'
+        run: |
+          rustup target add aarch64-unknown-linux-gnu
       - name: Build Binary
         run: |
           target=${{ steps.target.outputs.target }}
