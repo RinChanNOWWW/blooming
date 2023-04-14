@@ -36,7 +36,7 @@ impl From<MikanRSSItem> for Item {
         Item {
             title: item.title,
             pub_date,
-            url: item.torrent.link,
+            url: item.enclosure.url,
         }
     }
 }

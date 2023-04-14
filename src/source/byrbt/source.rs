@@ -15,6 +15,8 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+use anyhow::Error;
+
 use super::item::ByrbtRSSContent;
 use crate::source::Item;
 use crate::source::Source;
@@ -52,7 +54,8 @@ impl Source for ByrbtSource {
             .map(|rss| {
                 let resp = reqwest::blocking::get(rss)?;
                 let content = resp.text()?;
-                let content: ByrbtRSSContent = serde_xml_rs::from_str(&content)?;
+                let content: ByrbtRSSContent =
+                    yaserde::de::from_str(&content).map_err(Error::msg)?;
                 Ok(content)
             })
             .collect::<Result<Vec<_>>>()?;

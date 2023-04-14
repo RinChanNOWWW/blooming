@@ -14,6 +14,7 @@
 
 use std::fs::File;
 
+use anyhow::Error;
 use bloom::ByrbtRSSContent;
 use bloom::Item;
 use bloom::MikanRSSContent;
@@ -25,7 +26,7 @@ use chrono::Local;
 #[test]
 fn test_parse_mikan() -> Result<()> {
     let file = File::open("tests/it/testdata/mikan.xml")?;
-    let content: MikanRSSContent = serde_xml_rs::from_reader(file)?;
+    let content: MikanRSSContent = yaserde::de::from_reader(file).map_err(Error::msg)?;
 
     let items = content
         .channel
@@ -40,16 +41,18 @@ fn test_parse_mikan() -> Result<()> {
         pub_date: DateTime::parse_from_rfc3339("2023-01-24T14:34:31.721+08:00")
             .unwrap()
             .with_timezone(&Local {}),
-        url: "https://mikanani.me/Home/Episode/5dd79686d9b6c1ab2a6091363d493d05333d8899"
-            .to_string(),
+        url:
+            "https://mikanani.me/Download/20230124/5dd79686d9b6c1ab2a6091363d493d05333d8899.torrent"
+                .to_string(),
     };
     let item2 = Item {
         title: "[ANi] The Vampire Dies in No Time S2 - 吸血鬼马上死 第二季 - 03".to_string(),
         pub_date: DateTime::parse_from_rfc3339("2023-01-23T21:37:12.436+08:00")
             .unwrap()
             .with_timezone(&Local {}),
-        url: "https://mikanani.me/Home/Episode/fa2fca2b18dc4d6e166cab56fd36dcb547eafe6e"
-            .to_string(),
+        url:
+            "https://mikanani.me/Download/20230123/fa2fca2b18dc4d6e166cab56fd36dcb547eafe6e.torrent"
+                .to_string(),
     };
     let expected = vec![item1, item2];
 
@@ -61,7 +64,7 @@ fn test_parse_mikan() -> Result<()> {
 #[test]
 fn test_parse_byrbt() -> Result<()> {
     let file = File::open("tests/it/testdata/byrbt.xml")?;
-    let content: ByrbtRSSContent = serde_xml_rs::from_reader(file)?;
+    let content: ByrbtRSSContent = yaserde::de::from_reader(file).map_err(Error::msg)?;
 
     let items = content
         .channel
@@ -97,7 +100,7 @@ fn test_parse_byrbt() -> Result<()> {
 #[test]
 fn test_parse_tjubt() -> Result<()> {
     let file = File::open("tests/it/testdata/tjupt.xml")?;
-    let content: TjuptRSSContent = serde_xml_rs::from_reader(file)?;
+    let content: TjuptRSSContent = yaserde::de::from_reader(file).map_err(Error::msg)?;
 
     let items = content
         .channel

@@ -12,37 +12,49 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use serde::Deserialize;
-use serde::Serialize;
+use yaserde_derive::YaDeserialize;
+use yaserde_derive::YaSerialize;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, YaDeserialize, Default)]
 pub struct MikanRSSContent {
     pub channel: Channel,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, YaDeserialize, YaSerialize, Default)]
 pub struct Channel {
     pub title: String,
     pub link: String,
     pub description: String,
-    #[serde(rename = "item")]
+    #[yaserde(rename = "item")]
     pub items: Vec<MikanRSSItem>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, YaDeserialize, YaSerialize, Default)]
 pub struct MikanRSSItem {
     pub guid: String,
     pub link: String,
     pub title: String,
     pub description: String,
     pub torrent: Torrent,
+    pub enclosure: Enclosure,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, YaDeserialize, YaSerialize, Default)]
+#[yaserde(namespace = "https://mikanani.me/0.1/")]
 pub struct Torrent {
     pub link: String,
-    #[serde(rename = "contentLength")]
+    #[yaserde(rename = "contentLength")]
     pub content_length: String,
-    #[serde(rename = "pubDate")]
+    #[yaserde(rename = "pubDate")]
     pub pub_date: String,
+}
+
+#[derive(Debug, YaDeserialize, YaSerialize, Default)]
+pub struct Enclosure {
+    #[yaserde(attribute, rename = "type")]
+    pub e_type: String,
+    #[yaserde(attribute)]
+    pub length: String,
+    #[yaserde(attribute)]
+    pub url: String,
 }
