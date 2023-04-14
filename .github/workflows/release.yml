@@ -157,6 +157,7 @@ jobs:
         if: matrix.arch == 'aarch64'
         run: |
           rustup target add aarch64-unknown-linux-gnu
+          sudo apt install libssl-dev
       - name: Build Binary
         run: |
           target=${{ steps.target.outputs.target }}
