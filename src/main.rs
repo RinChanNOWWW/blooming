@@ -33,9 +33,13 @@ use daemonize::Daemonize;
 use log::error;
 use log::info;
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 fn main_impl(config: Config) -> Result<()> {
     let qq_conf = &config.qq;
     let notifier = notifier::QQNotifier::new(
+        qq_conf.name.clone(),
+        qq_conf.uin.clone(),
         qq_conf.api.clone(),
         qq_conf.dms.clone(),
         qq_conf.groups.clone(),
@@ -102,7 +106,8 @@ fn main() -> Result<()> {
     let args = ClapConfig::parse();
 
     let config = Config::load(&args.config_file)?;
-    info!("Starting Mikan Notifier with config: {:?}", config);
+    info!("Welcome to use bloom (version: {})", VERSION);
+    info!("Starting bloom with config: {:?}", config);
 
     if args.daemonize {
         let current_dir = current_dir()?;

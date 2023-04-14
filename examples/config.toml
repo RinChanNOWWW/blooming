@@ -13,6 +13,8 @@ rsses = ["https://www.tjupt.org/torrentrss.php?rows=10&cat402=1&icat=1&ismalldes
 interval = 500
 
 [qq]
+name = "BOT"
+uin = "123456789"
 api = "http://localhost:8000"
 dms = [114514, 1919810]
 groups = [114514, 1919810]
