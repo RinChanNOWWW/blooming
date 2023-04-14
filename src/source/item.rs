@@ -22,6 +22,8 @@ use super::tjupt::TjuptRSSItem;
 #[derive(Clone, Debug, PartialEq)]
 pub struct Item {
     pub title: String,
+    /// Torrent download url.
+    pub url: String,
     pub pub_date: DateTime<Local>,
 }
 
@@ -34,6 +36,7 @@ impl From<MikanRSSItem> for Item {
         Item {
             title: item.title,
             pub_date,
+            url: item.enclosure.url,
         }
     }
 }
@@ -45,6 +48,7 @@ impl From<ByrbtRSSItem> for Item {
         Item {
             title: item.title,
             pub_date,
+            url: item.link,
         }
     }
 }
@@ -56,6 +60,7 @@ impl From<TjuptRSSItem> for Item {
         Item {
             title: item.title,
             pub_date,
+            url: item.link,
         }
     }
 }

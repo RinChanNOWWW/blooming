@@ -12,30 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use serde::Deserialize;
-use serde::Serialize;
+use yaserde_derive::YaDeserialize;
+use yaserde_derive::YaSerialize;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, YaDeserialize, YaSerialize, Default)]
 pub struct TjuptRSSContent {
     pub channel: Channel,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, YaDeserialize, YaSerialize, Default)]
 pub struct Channel {
     pub language: String,
     pub title: String,
     pub description: String,
     pub image: Image,
-    #[serde(rename = "pubDate")]
+    #[yaserde(rename = "pubDate")]
     pub pub_date: String,
     pub generator: String,
     pub link: String,
     pub copyright: String,
-    #[serde(rename = "item")]
+    #[yaserde(rename = "item")]
     pub items: Vec<TjuptRSSItem>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, YaDeserialize, YaSerialize, Default)]
 pub struct Image {
     pub url: String,
     pub title: String,
@@ -45,16 +45,14 @@ pub struct Image {
     pub description: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, YaDeserialize, YaSerialize, Default)]
 pub struct TjuptRSSItem {
     pub title: String,
     pub description: String,
-    #[serde(rename = "pubDate")]
+    #[yaserde(rename = "pubDate")]
     pub pub_date: String,
     pub link: String,
     pub guid: String,
     pub author: String,
-    // TODO: parse comments when serde_xml_rs supports namespace.
-    // pub comments: String,
     pub category: String,
 }

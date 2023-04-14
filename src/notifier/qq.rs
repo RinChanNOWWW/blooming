@@ -30,6 +30,8 @@ pub struct QQNotifier {
 
 struct Notifier {
     client: Client,
+    name: String,
+    uin: String,
     api: String,
     dms: Vec<u64>,
     groups: Vec<u64>,
@@ -38,18 +40,36 @@ struct Notifier {
 #[derive(Serialize, Deserialize)]
 struct PrivateMsg {
     user_id: u64,
-    message: String,
+    messages: Vec<Message>,
 }
 
 #[derive(Serialize, Deserialize)]
 struct GroupMsg {
     group_id: u64,
-    message: String,
+    messages: Vec<Message>,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+struct Message {
+    #[serde(rename = "type")]
+    msg_type: String,
+    data: Data,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+struct Data {
+    #[serde(rename = "name")]
+    sender_name: String,
+    #[serde(rename = "uin")]
+    sender_uin: String,
+    content: String,
 }
 
 impl Notifier {
-    pub fn new(api: String, dms: Vec<u64>, groups: Vec<u64>) -> Self {
+    pub fn new(name: String, uin: String, api: String, dms: Vec<u64>, groups: Vec<u64>) -> Self {
         Self {
+            name,
+            uin,
             client: Client::new(),
             api,
             dms,
@@ -59,9 +79,9 @@ impl Notifier {
 }
 
 impl QQNotifier {
-    pub fn new(api: String, dms: Vec<u64>, groups: Vec<u64>) -> Self {
+    pub fn new(name: String, uin: String, api: String, dms: Vec<u64>, groups: Vec<u64>) -> Self {
         Self {
-            inner: Arc::new(Notifier::new(api, dms, groups)),
+            inner: Arc::new(Notifier::new(name, uin, api, dms, groups)),
         }
     }
 
@@ -73,11 +93,12 @@ impl QQNotifier {
             let pm_items = items.clone();
             let source = source.to_string();
             let dms_handle = std::thread::spawn(move || {
+                let mut msgs = Vec::with_capacity(pm_items.len() * 2);
                 for item in pm_items.iter() {
-                    let msg = format!("{}:\n{} ({})", source, item.title, item.pub_date);
-                    if let Err(e) = Self::send_private_msg(notifier.clone(), msg) {
-                        error!("Send private msg failed: {}", e);
-                    }
+                    msgs.extend(Self::wrap_item(&notifier, &source, item));
+                }
+                if let Err(e) = Self::send_private_msg(&notifier, msgs) {
+                    error!("Send private msg failed: {}", e);
                 }
             });
             handles.push(dms_handle);
@@ -88,11 +109,12 @@ impl QQNotifier {
             let gp_items = items;
             let source = source.to_string();
             let groups_handle = std::thread::spawn(move || {
+                let mut msgs = Vec::with_capacity(gp_items.len() * 2);
                 for item in gp_items.iter() {
-                    let msg = format!("{}:\n{} ({})", source, item.title, item.pub_date);
-                    if let Err(e) = Self::send_group_msg(notifier.clone(), msg) {
-                        error!("Send group msg failed: {}", e);
-                    }
+                    msgs.extend(Self::wrap_item(&notifier, &source, item));
+                }
+                if let Err(e) = Self::send_group_msg(&notifier, msgs) {
+                    error!("Send group msg failed: {}", e);
                 }
             });
             handles.push(groups_handle);
@@ -105,13 +127,34 @@ impl QQNotifier {
         Ok(())
     }
 
-    fn send_private_msg(notifier: Arc<Notifier>, msg: String) -> Result<()> {
-        let url = format!("{}/send_private_msg", notifier.api);
+    fn wrap_item(notifier: &Notifier, source: &str, item: &Item) -> Vec<Message> {
+        vec![
+            Message {
+                msg_type: "node".to_string(),
+                data: Data {
+                    sender_name: notifier.name.clone(),
+                    sender_uin: notifier.uin.clone(),
+                    content: format!("{}:\n{} ({})", source, item.title, item.pub_date),
+                },
+            },
+            Message {
+                msg_type: "node".to_string(),
+                data: Data {
+                    sender_name: notifier.name.clone(),
+                    sender_uin: notifier.uin.clone(),
+                    content: item.url.clone(),
+                },
+            },
+        ]
+    }
+
+    fn send_private_msg(notifier: &Notifier, msg: Vec<Message>) -> Result<()> {
+        let url = format!("{}/send_private_forward_msg", notifier.api);
 
         for user_id in notifier.dms.iter() {
             let body = PrivateMsg {
                 user_id: *user_id,
-                message: msg.clone(),
+                messages: msg.clone(),
             };
             notifier.client.post(url.clone()).json(&body).send()?;
             info!("Notified user {}", user_id);
@@ -119,12 +162,12 @@ impl QQNotifier {
         Ok(())
     }
 
-    fn send_group_msg(notifier: Arc<Notifier>, msg: String) -> Result<()> {
-        let url = format!("{}/send_group_msg", notifier.api);
+    fn send_group_msg(notifier: &Notifier, msg: Vec<Message>) -> Result<()> {
+        let url = format!("{}/send_group_forward_msg", notifier.api);
         for group_id in notifier.groups.iter() {
             let body = GroupMsg {
                 group_id: *group_id,
-                message: msg.clone(),
+                messages: msg.clone(),
             };
             notifier.client.post(url.clone()).json(&body).send()?;
             info!("Notified group {}", group_id);

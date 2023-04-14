@@ -15,6 +15,8 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+use anyhow::Error;
+
 use super::item::MikanRSSContent;
 use crate::source::Item;
 use crate::source::Source;
@@ -48,7 +50,7 @@ impl Source for MikanSource {
     fn pull_items(&self) -> Result<Vec<Item>> {
         let resp = reqwest::blocking::get(&self.rss)?;
         let content = resp.text()?;
-        let content: MikanRSSContent = serde_xml_rs::from_str(&content)?;
+        let content: MikanRSSContent = yaserde::de::from_str(&content).map_err(Error::msg)?;
 
         Ok(content
             .channel

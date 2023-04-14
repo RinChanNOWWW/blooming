@@ -22,6 +22,10 @@ use crate::Result;
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct QQBotConfig {
+    /// The name of the bot.
+    pub name: String,
+    /// The uin (QQ number) of the bot.
+    pub uin: String,
     /// go-cqhttp HTTP api. like: http://qqbot.me
     pub api: String,
     /// qq personal contacts

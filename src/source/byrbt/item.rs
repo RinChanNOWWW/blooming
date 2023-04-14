@@ -12,34 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use serde::Deserialize;
-use serde::Serialize;
+use yaserde_derive::YaDeserialize;
+use yaserde_derive::YaSerialize;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, YaDeserialize, YaSerialize, Default)]
 pub struct ByrbtRSSContent {
     pub channel: Channel,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, YaDeserialize, YaSerialize, Default)]
 pub struct Channel {
     pub title: String,
     pub link: String,
     pub description: String,
     pub language: String,
     pub copyright: String,
-    #[serde(rename = "managingEditor")]
+    #[yaserde(rename = "managingEditor")]
     pub managing_editor: String,
-    #[serde(rename = "webMaster")]
+    #[yaserde(rename = "webMaster")]
     pub web_master: String,
-    #[serde(rename = "pubDate")]
+    #[yaserde(rename = "pubDate")]
     pub pub_date: String,
     pub generator: String,
     pub docs: String,
-    #[serde(rename = "item")]
+    #[yaserde(rename = "item")]
     pub items: Vec<ByrbtRSSItem>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, YaDeserialize, YaSerialize, Default)]
 pub struct Image {
     pub url: String,
     pub title: String,
@@ -49,7 +49,7 @@ pub struct Image {
     pub description: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, YaDeserialize, YaSerialize, Default)]
 pub struct ByrbtRSSItem {
     pub title: String,
     pub link: String,
@@ -58,6 +58,6 @@ pub struct ByrbtRSSItem {
     pub category: String,
     pub comments: String,
     pub guid: String,
-    #[serde(rename = "pubDate")]
+    #[yaserde(rename = "pubDate")]
     pub pub_date: String,
 }
