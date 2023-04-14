@@ -33,20 +33,25 @@ fn test_parse_mikan() -> Result<()> {
         .into_iter()
         .map(Item::from)
         .collect::<Vec<_>>();
-    let expected =
-        vec![Item {
+
+    let item1 = Item {
         title: "【豌豆字幕组】[海盗战记 / 冰海战记 第二季 / Vinland_Saga_S2][03][简体][1080P][MP4]"
             .to_string(),
         pub_date: DateTime::parse_from_rfc3339("2023-01-24T14:34:31.721+08:00")
             .unwrap()
             .with_timezone(&Local {}),
-    },Item {
-        title: "[ANi] The Vampire Dies in No Time S2 - 吸血鬼马上死 第二季 - 03 [1080P][Baha][WEB-DL][AAC AVC][CHT][MP4]"
+        url: "https://mikanani.me/Home/Episode/5dd79686d9b6c1ab2a6091363d493d05333d8899"
             .to_string(),
+    };
+    let item2 = Item {
+        title: "[ANi] The Vampire Dies in No Time S2 - 吸血鬼马上死 第二季 - 03".to_string(),
         pub_date: DateTime::parse_from_rfc3339("2023-01-23T21:37:12.436+08:00")
             .unwrap()
             .with_timezone(&Local {}),
-    }];
+        url: "https://mikanani.me/Home/Episode/fa2fca2b18dc4d6e166cab56fd36dcb547eafe6e"
+            .to_string(),
+    };
+    let expected = vec![item1, item2];
 
     assert_eq!(items, expected);
 
@@ -64,20 +69,25 @@ fn test_parse_byrbt() -> Result<()> {
         .into_iter()
         .map(Item::from)
         .collect::<Vec<_>>();
-    let expected =
-        vec![Item {
-        title: "[大陆][三体][Three-Body.S01.2023.WEB-DL.4K.H265.AAC-venti][S01E12][MP4]"
-            .to_string(),
-        pub_date: DateTime::parse_from_rfc2822("Tue, 24 Jan 2023 21:29:39 +0800")
-            .unwrap()
-            .with_timezone(&Local {}),
-    },Item {
-        title: "[大陆][三体][Three.Body.S01.2023.2160p.DV.WEB-DL.H265.DDP5.1.Atmos-CHDWEB][E10-E11][MP4]"
-            .to_string(),
-        pub_date: DateTime::parse_from_rfc2822("Tue, 24 Jan 2023 20:21:43 +0800")
-            .unwrap()
-            .with_timezone(&Local {}),
-    }];
+
+    let expected = vec![
+        Item {
+            title: "[大陆][三体][Three-Body.S01.2023.WEB-DL.4K.H265.AAC-venti][S01E12][MP4]"
+                .to_string(),
+            pub_date: DateTime::parse_from_rfc2822("Tue, 24 Jan 2023 21:29:39 +0800")
+                .unwrap()
+                .with_timezone(&Local {}),
+            url: "https://byr.pt/details.php?id=330667".to_string(),
+        },
+        Item {
+            title: "[大陆][三体][Three.Body.S01.2023.2160p.DV.WEB-DL.H265.DDP5.1.Atmos-CHDWEB]"
+                .to_string(),
+            pub_date: DateTime::parse_from_rfc2822("Tue, 24 Jan 2023 20:21:43 +0800")
+                .unwrap()
+                .with_timezone(&Local {}),
+            url: "https://byr.pt/details.php?id=330666".to_string(),
+        },
+    ];
 
     assert_eq!(items, expected);
 
@@ -95,13 +105,12 @@ fn test_parse_tjubt() -> Result<()> {
         .into_iter()
         .map(Item::from)
         .collect::<Vec<_>>();
-    let expected =
-        vec![Item {
-        title: "[电影][意大利/法国][阿玛柯德][Amarcord.1973.Criterion.Collection.1080p.BluRay.x264-WiKi][阿玛柯德/我记得/想当年(港)/阿玛珂德(台)][14.10GiB]"
-            .to_string(),
+    let expected = vec![Item {
+        title: "[Amarcord.1973.Criterion.Collection.1080p.BluRay.x264-WiKi]".to_string(),
         pub_date: DateTime::parse_from_rfc2822("Mon, 03 May 2021 05:35:49 +0000")
             .unwrap()
             .with_timezone(&Local {}),
+        url: "https://www.tjupt.org/details.php?id=242844&hit=1".to_string(),
     }];
 
     assert_eq!(items, expected);
