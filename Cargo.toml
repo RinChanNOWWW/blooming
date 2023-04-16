@@ -1,7 +1,16 @@
 [package]
 edition = "2021"
-name = "bloom"
+name = "blooming"
 version = "0.3.0"
+authors = ["RinChanNOW <rin_chan_now@outlook.com>"]
+description = "BT/PT 站订阅更新通知器。"
+homepage = "https://github.com/RinChanNOWWW/blooming"
+documentation = "https://github.com/RinChanNOWWW/blooming"
+repository = "https://github.com/RinChanNOWWW/blooming"
+readme = "README.md"
+license-file = "LICENSE"
+keywords = ["rss", "cronjob", "mikanproject", "pt", "bt"]
+categories = ["command-line-utilities"]
 
 [lib]
 doctest = false

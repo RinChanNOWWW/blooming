@@ -1,4 +1,4 @@
-# bloom
+# blooming
 
 BT/PT 站 RSS 更新通知器。
 
@@ -15,11 +15,11 @@ BT/PT 站 RSS 更新通知器。
 ## 使用
 
 ```bash
-./bloom -c config.toml
+blooming -c config.toml
 
 # or
 
-./bloom -c config.toml -d # daemon mode
+blooming -c config.toml -d # daemon mode
 ```
 
 配置文件请参考 [config.toml](examples/config.toml).

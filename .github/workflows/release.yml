@@ -105,12 +105,12 @@ jobs:
           target=${{ steps.target.outputs.target }}
           version=${{ needs.create_release.outputs.version }}
           cargo build --release --target=${target}
-          cp ./target/${target}/release/bloom bloom-${version}-${target}
+          cp ./target/${target}/release/blooming blooming-${version}-${target}
       - name: generate sha256sums
         run: |
           target=${{ steps.target.outputs.target }}
           version=${{ needs.create_release.outputs.version }}
-          sha256sum bloom-${version}-${target} >> sha256-${version}-${target}.txt
+          sha256sum blooming-${version}-${target} >> sha256-${version}-${target}.txt
       - name: post sha256
         uses: actions/upload-artifact@v3
         with:
@@ -163,12 +163,12 @@ jobs:
           target=${{ steps.target.outputs.target }}
           version=${{ needs.create_release.outputs.version }}
           cargo build --release --target=${target}
-          cp ./target/${target}/release/bloom bloom-${version}-${target}
+          cp ./target/${target}/release/blooming blooming-${version}-${target}
       - name: generate sha256sums
         run: |
           target=${{ steps.target.outputs.target }}
           version=${{ needs.create_release.outputs.version }}
-          sha256sum bloom-${version}-${target} >> sha256-${version}-${target}.txt
+          sha256sum blooming-${version}-${target} >> sha256-${version}-${target}.txt
       - name: post sha256
         uses: actions/upload-artifact@v3
         with:
