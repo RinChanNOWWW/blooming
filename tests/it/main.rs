@@ -15,11 +15,11 @@
 use std::fs::File;
 
 use anyhow::Error;
-use bloom::ByrbtRSSContent;
-use bloom::Item;
-use bloom::MikanRSSContent;
-use bloom::Result;
-use bloom::TjuptRSSContent;
+use blooming::ByrbtRSSContent;
+use blooming::Item;
+use blooming::MikanRSSContent;
+use blooming::Result;
+use blooming::TjuptRSSContent;
 use chrono::DateTime;
 use chrono::Local;
 

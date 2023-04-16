@@ -17,7 +17,7 @@ runs:
     - name: Update release to github
       shell: bash
       # Reference: https://cli.github.com/manual/gh_release_upload
-      run: gh release upload ${{ inputs.version }} bloom-${{ inputs.version }}-${{ inputs.target }} --clobber
+      run: gh release upload ${{ inputs.version }} blooming-${{ inputs.version }}-${{ inputs.target }} --clobber
       env:
         GH_TOKEN: ${{ inputs.github_token }}
 

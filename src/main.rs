@@ -19,14 +19,14 @@ use std::fs::File;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use bloom::notifier;
-use bloom::source::register;
-use bloom::source::SourceFactory;
-use bloom::source::SourcePtr;
-use bloom::ClapConfig;
-use bloom::Config;
-use bloom::QQNotifier;
-use bloom::Result;
+use blooming::notifier;
+use blooming::source::register;
+use blooming::source::SourceFactory;
+use blooming::source::SourcePtr;
+use blooming::ClapConfig;
+use blooming::Config;
+use blooming::QQNotifier;
+use blooming::Result;
 use chrono::Local;
 use clap::Parser;
 use daemonize::Daemonize;
@@ -106,13 +106,13 @@ fn main() -> Result<()> {
     let args = ClapConfig::parse();
 
     let config = Config::load(&args.config_file)?;
-    info!("Welcome to use bloom (version: {})", VERSION);
-    info!("Starting bloom with config: {:?}", config);
+    info!("Welcome to use blooming (version: {})", VERSION);
+    info!("Starting blooming with config: {:?}", config);
 
     if args.daemonize {
         let current_dir = current_dir()?;
-        let log_file = PathBuf::from(format!("{}/bloom.log", current_dir.display()));
-        let pid_file = PathBuf::from(format!("{}/bloom.pid", current_dir.display()));
+        let log_file = PathBuf::from(format!("{}/blooming.log", current_dir.display()));
+        let pid_file = PathBuf::from(format!("{}/blooming.pid", current_dir.display()));
 
         let stdout = File::create(log_file.clone())?;
         let stderr = File::create(log_file)?;
