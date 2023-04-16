@@ -12,6 +12,24 @@ BT/PT 站 RSS 更新通知器。
 
 - QQ 机器人: [go-cqhttp](https://github.com/Mrs4s/go-cqhttp).
 
+## Install
+
+### Download and Install from crates.io
+
+```bash
+cargo install blooming
+```
+
+### Download from Github Release
+
+https://github.com/RinChanNOWWW/blooming/releases
+
+### Build from source
+
+```bash
+cargo build --release
+```
+
 ## 使用
 
 ```bash
