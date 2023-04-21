@@ -37,6 +37,8 @@ pub trait Source: Send + Sync {
     fn pull_items(&self) -> Result<Vec<Item>>;
     /// The time interval between two pulls.
     fn interval(&self) -> Duration;
+    /// Check connection to the RSS source.
+    fn check_connection(&self) -> Result<()>;
 }
 
 pub type SourcePtr = Arc<dyn Source>;

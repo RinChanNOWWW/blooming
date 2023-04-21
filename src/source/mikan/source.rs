@@ -16,6 +16,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::Error;
+use reqwest::blocking::Client;
 
 use super::item::MikanRSSContent;
 use crate::source::Item;
@@ -27,14 +28,18 @@ use crate::Result;
 pub struct MikanSource {
     rss: String,
     interval: Duration,
+    client: Client,
 }
 
 impl MikanSource {
-    pub fn create(config: &MikanConfig) -> SourcePtr {
-        Arc::new(Self {
+    pub fn try_create(config: &MikanConfig) -> Result<SourcePtr> {
+        let client = Client::builder().timeout(Duration::from_secs(2)).build()?;
+
+        Ok(Arc::new(Self {
             rss: config.rss.clone(),
             interval: Duration::from_secs(config.interval),
-        })
+            client,
+        }))
     }
 }
 
@@ -48,7 +53,7 @@ impl Source for MikanSource {
     }
 
     fn pull_items(&self) -> Result<Vec<Item>> {
-        let resp = reqwest::blocking::get(&self.rss)?;
+        let resp = self.client.get(&self.rss).send()?;
         let content = resp.text()?;
         let content: MikanRSSContent = yaserde::de::from_str(&content).map_err(Error::msg)?;
 
@@ -58,5 +63,10 @@ impl Source for MikanSource {
             .into_iter()
             .map(Item::from)
             .collect::<Vec<_>>())
+    }
+
+    fn check_connection(&self) -> Result<()> {
+        self.client.get(&self.rss).send()?;
+        Ok(())
     }
 }
