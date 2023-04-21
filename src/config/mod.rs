@@ -65,6 +65,9 @@ pub struct MikanConfig {
 
     // Time interval for checking rss.
     pub interval: u64,
+
+    // Proxy address
+    pub proxy: Option<String>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]

@@ -17,6 +17,7 @@ use std::time::Duration;
 
 use anyhow::Error;
 use reqwest::blocking::Client;
+use reqwest::Proxy;
 
 use super::item::MikanRSSContent;
 use crate::source::Item;
@@ -33,7 +34,15 @@ pub struct MikanSource {
 
 impl MikanSource {
     pub fn try_create(config: &MikanConfig) -> Result<SourcePtr> {
-        let client = Client::builder().timeout(Duration::from_secs(2)).build()?;
+        let mut builder = Client::builder().timeout(Duration::from_secs(2));
+
+        if let Some(proxy) = &config.proxy {
+            builder = builder
+                .proxy(Proxy::http(proxy)?)
+                .proxy(Proxy::https(proxy)?)
+        }
+
+        let client = builder.build()?;
 
         Ok(Arc::new(Self {
             rss: config.rss.clone(),
