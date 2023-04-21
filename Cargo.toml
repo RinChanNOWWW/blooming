@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "blooming"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["RinChanNOW <rin_chan_now@outlook.com>"]
 description = "BT/PT 站订阅更新通知器。"
 homepage = "https://github.com/RinChanNOWWW/blooming"
