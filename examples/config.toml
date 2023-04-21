@@ -1,6 +1,7 @@
 [mikan]
 rss = "https://mikanani.me/RSS/MyBangumi?token=token"
 interval = 500
+proxy = "http://localhost:7890"
 
 [byrbt]
 # support multiple rss-es.

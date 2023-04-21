@@ -68,4 +68,11 @@ impl Source for TjuptSource {
 
         Ok(items)
     }
+
+    fn check_connection(&self) -> Result<()> {
+        for rss in &self.rsses {
+            reqwest::blocking::get(rss)?;
+        }
+        Ok(())
+    }
 }

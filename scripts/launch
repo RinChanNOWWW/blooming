@@ -1,0 +1,3 @@
+#!/bin/bash
+
+RUST_LOG=info ./blooming -c config.toml -d 2>&1 | tee blooming.log

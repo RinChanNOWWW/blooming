@@ -17,10 +17,11 @@ use super::mikan::MikanSource;
 use super::tjupt::TjuptSource;
 use super::SourcePtr;
 use crate::Config;
+use crate::Result;
 
-pub fn register(factory: &mut SourceFactory, config: &Config) {
+pub fn register(factory: &mut SourceFactory, config: &Config) -> Result<()> {
     if let Some(config) = &config.mikan {
-        factory.register(MikanSource::create(config))
+        factory.register(MikanSource::try_create(config)?)
     }
     if let Some(config) = &config.byrbt {
         factory.register(ByrbtSource::create(config));
@@ -28,6 +29,8 @@ pub fn register(factory: &mut SourceFactory, config: &Config) {
     if let Some(config) = &config.tjupt {
         factory.register(TjuptSource::create(config));
     }
+
+    Ok(())
 }
 
 #[derive(Default)]

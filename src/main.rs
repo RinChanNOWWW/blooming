@@ -46,7 +46,7 @@ fn main_impl(config: Config) -> Result<()> {
     );
 
     let mut factory = SourceFactory::default();
-    register(&mut factory, &config);
+    register(&mut factory, &config)?;
 
     activate_sources(factory, Arc::new(notifier))
 }
@@ -69,6 +69,12 @@ fn activate_sources(factory: SourceFactory, notifier: Arc<QQNotifier>) -> Result
 }
 
 fn run(source: SourcePtr, notifier: Arc<QQNotifier>) {
+    if source.check_connection().is_err() {
+        error!("Check connection of '{}' failed", source.name());
+    } else {
+        info!("Check connection of '{}' successful", source.name());
+    }
+
     let mut last_update = Local::now();
     let interval = source.interval();
 
