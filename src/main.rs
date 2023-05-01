@@ -35,22 +35,20 @@ use log::info;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-fn main_impl(config: Config) -> Result<()> {
-    monoio::start::<monoio::IoUringDriver, _>(async move {
-        let qq_conf = &config.qq;
-        let notifier = notifier::QQNotifier::new(
-            qq_conf.name.clone(),
-            qq_conf.uin.clone(),
-            qq_conf.api.clone(),
-            qq_conf.dms.clone(),
-            qq_conf.groups.clone(),
-        );
+async fn main_impl(config: Config) -> Result<()> {
+    let qq_conf = &config.qq;
+    let notifier = notifier::QQNotifier::new(
+        qq_conf.name.clone(),
+        qq_conf.uin.clone(),
+        qq_conf.api.clone(),
+        qq_conf.dms.clone(),
+        qq_conf.groups.clone(),
+    );
 
-        let mut factory = SourceFactory::default();
-        register(&mut factory, &config)?;
+    let mut factory = SourceFactory::default();
+    register(&mut factory, &config)?;
 
-        activate_sources(factory, Arc::new(notifier)).await
-    })
+    activate_sources(factory, Arc::new(notifier)).await
 }
 
 async fn activate_sources(factory: SourceFactory, notifier: Arc<QQNotifier>) -> Result<()> {
@@ -60,7 +58,7 @@ async fn activate_sources(factory: SourceFactory, notifier: Arc<QQNotifier>) -> 
         .map(|source| {
             let source = source.clone();
             let n = notifier.clone();
-            monoio::spawn(async move {
+            tokio::spawn(async move {
                 run(source, n).await;
             })
         })
@@ -82,7 +80,7 @@ async fn run(source: SourcePtr, notifier: Arc<QQNotifier>) {
     let interval = source.interval();
 
     loop {
-        monoio::time::sleep(interval).await;
+        tokio::time::sleep(interval).await;
 
         let result: Result<()> = try {
             let items = source.pull_items().await?;
@@ -109,7 +107,8 @@ async fn run(source: SourcePtr, notifier: Arc<QQNotifier>) {
     }
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     pretty_env_logger::init();
 
     let args = ClapConfig::parse();
@@ -134,5 +133,5 @@ fn main() -> Result<()> {
         daemon.start()?;
     }
 
-    main_impl(config)
+    main_impl(config).await
 }

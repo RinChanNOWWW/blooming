@@ -125,7 +125,7 @@ impl QQNotifier {
         let join_dm = futures::future::join_all(dm_handles);
         let join_pm = futures::future::join_all(pm_handles);
 
-        monoio::join!(join_dm, join_pm);
+        tokio::join!(join_dm, join_pm);
 
         Ok(())
     }

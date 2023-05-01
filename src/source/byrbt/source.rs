@@ -49,17 +49,19 @@ impl Source for ByrbtSource {
     }
 
     async fn pull_items(&self) -> Result<Vec<Item>> {
-        let contents = self
+        let handles = self
             .rsses
             .iter()
             .map(|rss| {
-                let resp = reqwest::blocking::get(rss)?;
-                let content = resp.text()?;
-                let content: ByrbtRSSContent =
-                    yaserde::de::from_str(&content).map_err(Error::msg)?;
-                Ok(content)
+                let rss = rss.clone();
+                async move {
+                    let content = reqwest::get(rss).await?.text().await?;
+                    yaserde::de::from_str::<ByrbtRSSContent>(&content).map_err(Error::msg)
+                }
             })
-            .collect::<Result<Vec<_>>>()?;
+            .collect::<Vec<_>>();
+
+        let contents = futures::future::try_join_all(handles).await?;
 
         let items = contents
             .into_iter()
@@ -70,10 +72,7 @@ impl Source for ByrbtSource {
         Ok(items)
     }
 
-    async fn check_connection(&self) -> Result<()> {
-        for rss in &self.rsses {
-            reqwest::blocking::get(rss)?;
-        }
-        Ok(())
+    fn rsses(&self) -> Vec<String> {
+        self.rsses.clone()
     }
 }

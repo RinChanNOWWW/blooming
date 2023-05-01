@@ -38,8 +38,20 @@ pub trait Source: Send + Sync {
     async fn pull_items(&self) -> Result<Vec<Item>>;
     /// The time interval between two pulls.
     fn interval(&self) -> Duration;
+    /// Get RSS subscription links.
+    fn rsses(&self) -> Vec<String>;
     /// Check connection to the RSS source.
-    async fn check_connection(&self) -> Result<()>;
+    async fn check_connection(&self) -> Result<()> {
+        let handles = self
+            .rsses()
+            .into_iter()
+            .map(|rss| async move { reqwest::get(&rss).await })
+            .collect::<Vec<_>>();
+
+        futures::future::try_join_all(handles).await?;
+
+        Ok(())
+    }
 }
 
 pub type SourcePtr = Arc<dyn Source>;
