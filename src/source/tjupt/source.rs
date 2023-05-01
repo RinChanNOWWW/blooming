@@ -38,6 +38,7 @@ impl TjuptSource {
     }
 }
 
+#[async_trait::async_trait]
 impl Source for TjuptSource {
     fn name(&self) -> String {
         "TJUPT".to_string()
@@ -47,7 +48,7 @@ impl Source for TjuptSource {
         self.interval
     }
 
-    fn pull_items(&self) -> Result<Vec<Item>> {
+    async fn pull_items(&self) -> Result<Vec<Item>> {
         let contents = self
             .rsses
             .iter()
@@ -69,7 +70,7 @@ impl Source for TjuptSource {
         Ok(items)
     }
 
-    fn check_connection(&self) -> Result<()> {
+    async fn check_connection(&self) -> Result<()> {
         for rss in &self.rsses {
             reqwest::blocking::get(rss)?;
         }

@@ -38,6 +38,7 @@ impl ByrbtSource {
     }
 }
 
+#[async_trait::async_trait]
 impl Source for ByrbtSource {
     fn name(&self) -> String {
         "BYRBT".to_string()
@@ -47,7 +48,7 @@ impl Source for ByrbtSource {
         self.interval
     }
 
-    fn pull_items(&self) -> Result<Vec<Item>> {
+    async fn pull_items(&self) -> Result<Vec<Item>> {
         let contents = self
             .rsses
             .iter()
@@ -69,7 +70,7 @@ impl Source for ByrbtSource {
         Ok(items)
     }
 
-    fn check_connection(&self) -> Result<()> {
+    async fn check_connection(&self) -> Result<()> {
         for rss in &self.rsses {
             reqwest::blocking::get(rss)?;
         }

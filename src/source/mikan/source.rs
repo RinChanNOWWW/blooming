@@ -52,6 +52,7 @@ impl MikanSource {
     }
 }
 
+#[async_trait::async_trait]
 impl Source for MikanSource {
     fn name(&self) -> String {
         "Mikan".to_string()
@@ -61,7 +62,7 @@ impl Source for MikanSource {
         self.interval
     }
 
-    fn pull_items(&self) -> Result<Vec<Item>> {
+    async fn pull_items(&self) -> Result<Vec<Item>> {
         let resp = self.client.get(&self.rss).send()?;
         let content = resp.text()?;
         let content: MikanRSSContent = yaserde::de::from_str(&content).map_err(Error::msg)?;
@@ -74,7 +75,7 @@ impl Source for MikanSource {
             .collect::<Vec<_>>())
     }
 
-    fn check_connection(&self) -> Result<()> {
+    async fn check_connection(&self) -> Result<()> {
         self.client.get(&self.rss).send()?;
         Ok(())
     }

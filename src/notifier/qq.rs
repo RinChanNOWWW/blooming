@@ -85,7 +85,7 @@ impl QQNotifier {
         }
     }
 
-    pub fn notify(&self, source: &str, items: Vec<Item>) -> Result<()> {
+    pub async fn notify(&self, source: &str, items: Vec<Item>) -> Result<()> {
         let mut handles = Vec::new();
 
         {
