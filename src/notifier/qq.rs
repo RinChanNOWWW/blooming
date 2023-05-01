@@ -16,7 +16,7 @@ use std::sync::Arc;
 
 use log::error;
 use log::info;
-use reqwest::blocking::Client;
+use reqwest::Client;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -86,43 +86,46 @@ impl QQNotifier {
     }
 
     pub async fn notify(&self, source: &str, items: Vec<Item>) -> Result<()> {
-        let mut handles = Vec::new();
+        let mut pm_handles = Vec::new();
 
         {
             let notifier = self.inner.clone();
             let pm_items = items.clone();
             let source = source.to_string();
-            let dms_handle = std::thread::spawn(move || {
+            let dms_handle = async move {
                 let mut msgs = Vec::with_capacity(pm_items.len() * 2);
                 for item in pm_items.iter() {
                     msgs.extend(Self::wrap_item(&notifier, &source, item));
                 }
-                if let Err(e) = Self::send_private_msg(&notifier, msgs) {
+                if let Err(e) = Self::send_private_msg(&notifier, msgs).await {
                     error!("Send private msg failed: {}", e);
                 }
-            });
-            handles.push(dms_handle);
+            };
+            pm_handles.push(dms_handle);
         }
+
+        let mut dm_handles = Vec::new();
 
         {
             let notifier = self.inner.clone();
             let gp_items = items;
             let source = source.to_string();
-            let groups_handle = std::thread::spawn(move || {
+            let groups_handle = async move {
                 let mut msgs = Vec::with_capacity(gp_items.len() * 2);
                 for item in gp_items.iter() {
                     msgs.extend(Self::wrap_item(&notifier, &source, item));
                 }
-                if let Err(e) = Self::send_group_msg(&notifier, msgs) {
+                if let Err(e) = Self::send_group_msg(&notifier, msgs).await {
                     error!("Send group msg failed: {}", e);
                 }
-            });
-            handles.push(groups_handle);
+            };
+            dm_handles.push(groups_handle);
         }
 
-        for handle in handles {
-            handle.join().unwrap();
-        }
+        let join_dm = futures::future::join_all(dm_handles);
+        let join_pm = futures::future::join_all(pm_handles);
+
+        monoio::join!(join_dm, join_pm);
 
         Ok(())
     }
@@ -148,7 +151,7 @@ impl QQNotifier {
         ]
     }
 
-    fn send_private_msg(notifier: &Notifier, msg: Vec<Message>) -> Result<()> {
+    async fn send_private_msg(notifier: &Notifier, msg: Vec<Message>) -> Result<()> {
         let url = format!("{}/send_private_forward_msg", notifier.api);
 
         for user_id in notifier.dms.iter() {
@@ -156,20 +159,20 @@ impl QQNotifier {
                 user_id: *user_id,
                 messages: msg.clone(),
             };
-            notifier.client.post(url.clone()).json(&body).send()?;
+            notifier.client.post(url.clone()).json(&body).send().await?;
             info!("Notified user {}", user_id);
         }
         Ok(())
     }
 
-    fn send_group_msg(notifier: &Notifier, msg: Vec<Message>) -> Result<()> {
+    async fn send_group_msg(notifier: &Notifier, msg: Vec<Message>) -> Result<()> {
         let url = format!("{}/send_group_forward_msg", notifier.api);
         for group_id in notifier.groups.iter() {
             let body = GroupMsg {
                 group_id: *group_id,
                 messages: msg.clone(),
             };
-            notifier.client.post(url.clone()).json(&body).send()?;
+            notifier.client.post(url.clone()).json(&body).send().await?;
             info!("Notified group {}", group_id);
         }
         Ok(())
