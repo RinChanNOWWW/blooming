@@ -35,7 +35,7 @@ use log::info;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-fn main_impl(config: Config) -> Result<()> {
+async fn main_impl(config: Config) -> Result<()> {
     let qq_conf = &config.qq;
     let notifier = notifier::QQNotifier::new(
         qq_conf.name.clone(),
@@ -48,28 +48,29 @@ fn main_impl(config: Config) -> Result<()> {
     let mut factory = SourceFactory::default();
     register(&mut factory, &config)?;
 
-    activate_sources(factory, Arc::new(notifier))
+    activate_sources(factory, Arc::new(notifier)).await
 }
 
-fn activate_sources(factory: SourceFactory, notifier: Arc<QQNotifier>) -> Result<()> {
+async fn activate_sources(factory: SourceFactory, notifier: Arc<QQNotifier>) -> Result<()> {
     let sources = factory.sources();
     let handles = sources
         .iter()
         .map(|source| {
             let source = source.clone();
             let n = notifier.clone();
-            std::thread::spawn(move || run(source, n))
+            tokio::spawn(async move {
+                run(source, n).await;
+            })
         })
         .collect::<Vec<_>>();
 
-    for handle in handles {
-        handle.join().unwrap();
-    }
+    futures::future::join_all(handles).await;
+
     Ok(())
 }
 
-fn run(source: SourcePtr, notifier: Arc<QQNotifier>) {
-    if source.check_connection().is_err() {
+async fn run(source: SourcePtr, notifier: Arc<QQNotifier>) {
+    if source.check_connection().await.is_err() {
         error!("Check connection of '{}' failed", source.name());
     } else {
         info!("Check connection of '{}' successful", source.name());
@@ -79,10 +80,10 @@ fn run(source: SourcePtr, notifier: Arc<QQNotifier>) {
     let interval = source.interval();
 
     loop {
-        std::thread::sleep(interval);
+        tokio::time::sleep(interval).await;
 
         let result: Result<()> = try {
-            let items = source.pull_items()?;
+            let items = source.pull_items().await?;
             let new_items = items
                 .into_iter()
                 .filter(|item| item.pub_date > last_update)
@@ -96,7 +97,7 @@ fn run(source: SourcePtr, notifier: Arc<QQNotifier>) {
                 });
 
                 // notify by qq bot
-                notifier.notify(&source.name(), new_items)?;
+                notifier.notify(&source.name(), new_items).await?;
             }
         };
 
@@ -106,7 +107,8 @@ fn run(source: SourcePtr, notifier: Arc<QQNotifier>) {
     }
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     pretty_env_logger::init();
 
     let args = ClapConfig::parse();
@@ -131,5 +133,5 @@ fn main() -> Result<()> {
         daemon.start()?;
     }
 
-    main_impl(config)
+    main_impl(config).await
 }

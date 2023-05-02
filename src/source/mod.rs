@@ -21,24 +21,37 @@ mod tjupt;
 use std::sync::Arc;
 use std::time::Duration;
 
-pub use byrbt::*;
+pub use byrbt::ByrbtRSSContent;
 pub use factory::register;
 pub use factory::SourceFactory;
 pub use item::Item;
-pub use mikan::*;
-pub use tjupt::*;
+pub use mikan::MikanRSSContent;
+pub use tjupt::TjuptRSSContent;
 
 use crate::Result;
 
+#[async_trait::async_trait]
 pub trait Source: Send + Sync {
     /// The name of the source. Eg. mikan, byrbt.
     fn name(&self) -> String;
     /// Pull items from the source.
-    fn pull_items(&self) -> Result<Vec<Item>>;
+    async fn pull_items(&self) -> Result<Vec<Item>>;
     /// The time interval between two pulls.
     fn interval(&self) -> Duration;
+    /// Get RSS subscription links.
+    fn rsses(&self) -> Vec<String>;
     /// Check connection to the RSS source.
-    fn check_connection(&self) -> Result<()>;
+    async fn check_connection(&self) -> Result<()> {
+        let handles = self
+            .rsses()
+            .into_iter()
+            .map(|rss| async move { reqwest::get(&rss).await })
+            .collect::<Vec<_>>();
+
+        futures::future::try_join_all(handles).await?;
+
+        Ok(())
+    }
 }
 
 pub type SourcePtr = Arc<dyn Source>;

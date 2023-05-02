@@ -16,7 +16,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::Error;
-use reqwest::blocking::Client;
+use reqwest::Client;
 use reqwest::Proxy;
 
 use super::item::MikanRSSContent;
@@ -52,6 +52,7 @@ impl MikanSource {
     }
 }
 
+#[async_trait::async_trait]
 impl Source for MikanSource {
     fn name(&self) -> String {
         "Mikan".to_string()
@@ -61,9 +62,8 @@ impl Source for MikanSource {
         self.interval
     }
 
-    fn pull_items(&self) -> Result<Vec<Item>> {
-        let resp = self.client.get(&self.rss).send()?;
-        let content = resp.text()?;
+    async fn pull_items(&self) -> Result<Vec<Item>> {
+        let content = self.client.get(&self.rss).send().await?.text().await?;
         let content: MikanRSSContent = yaserde::de::from_str(&content).map_err(Error::msg)?;
 
         Ok(content
@@ -74,8 +74,12 @@ impl Source for MikanSource {
             .collect::<Vec<_>>())
     }
 
-    fn check_connection(&self) -> Result<()> {
-        self.client.get(&self.rss).send()?;
+    async fn check_connection(&self) -> Result<()> {
+        self.client.get(&self.rss).send().await?;
         Ok(())
+    }
+
+    fn rsses(&self) -> Vec<String> {
+        vec![self.rss.clone()]
     }
 }
