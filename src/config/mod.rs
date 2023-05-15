@@ -19,7 +19,7 @@ use serfig::collectors::from_file;
 
 use crate::Result;
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone)]
 #[serde(default)]
 pub struct QQBotConfig {
     /// The name of the bot.
@@ -32,6 +32,8 @@ pub struct QQBotConfig {
     pub dms: Vec<u64>,
     /// qq groups
     pub groups: Vec<u64>,
+    /// The delay between two messages. (ms)
+    pub delay: u64,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -63,7 +65,7 @@ pub struct MikanConfig {
     // mikan rss link.
     pub rss: String,
 
-    // Time interval for checking rss.
+    // Time interval for checking rss. (ms)
     pub interval: u64,
 
     // Proxy address
@@ -76,7 +78,7 @@ pub struct ByrbtConfig {
     // rss links
     pub rsses: Vec<String>,
 
-    // Time interval for checking rss.
+    // Time interval for checking rss. (ms)
     pub interval: u64,
 }
 
@@ -86,7 +88,7 @@ pub struct TjuptConfig {
     // rss links
     pub rsses: Vec<String>,
 
-    // Time interval for checking rss.
+    // Time interval for checking rss. (ms)
     pub interval: u64,
 }
 
