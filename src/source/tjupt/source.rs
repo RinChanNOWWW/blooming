@@ -15,9 +15,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use anyhow::Error;
-
-use super::item::TjuptRSSContent;
+use super::Tjupt;
 use crate::source::Item;
 use crate::source::Source;
 use crate::source::SourcePtr;
@@ -55,19 +53,15 @@ impl Source for TjuptSource {
             .map(|rss| {
                 let rss = rss.clone();
                 async move {
-                    let content = reqwest::get(rss).await?.text().await?;
-                    yaserde::de::from_str::<TjuptRSSContent>(&content).map_err(Error::msg)
+                    let content = reqwest::get(rss).await?.bytes().await?;
+                    Tjupt::parse_items(&content[..])
                 }
             })
             .collect::<Vec<_>>();
 
         let contents = futures::future::try_join_all(handles).await?;
 
-        let items = contents
-            .into_iter()
-            .flat_map(|content| content.channel.items)
-            .map(Item::from)
-            .collect::<Vec<_>>();
+        let items = contents.into_iter().flatten().collect::<Vec<_>>();
 
         Ok(items)
     }

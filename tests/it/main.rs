@@ -13,27 +13,26 @@
 // limitations under the License.
 
 use std::fs::File;
+use std::io::BufReader;
 
-use anyhow::Error;
-use blooming::ByrbtRSSContent;
+use blooming::Byrbt;
 use blooming::Item;
-use blooming::MikanRSSContent;
+use blooming::Mikan;
 use blooming::Result;
-use blooming::TjuptRSSContent;
+use blooming::Tjupt;
 use chrono::DateTime;
 use chrono::Local;
 
 #[test]
 fn test_parse_mikan() -> Result<()> {
-    let file = File::open("tests/it/testdata/mikan.xml")?;
-    let content: MikanRSSContent = yaserde::de::from_reader(file).map_err(Error::msg)?;
+    test_parse_mikan_impl("tests/it/testdata/mikan_v1.xml")?;
+    test_parse_mikan_impl("tests/it/testdata/mikan_v2.xml")
+}
 
-    let items = content
-        .channel
-        .items
-        .into_iter()
-        .map(Item::from)
-        .collect::<Vec<_>>();
+fn test_parse_mikan_impl(path: &str) -> Result<()> {
+    let file = File::open(path)?;
+
+    let items = Mikan::parse_items(BufReader::new(file))?;
 
     let item1 = Item {
         title: "【豌豆字幕组】[海盗战记 / 冰海战记 第二季 / Vinland_Saga_S2][03][简体][1080P][MP4]"
@@ -64,14 +63,8 @@ fn test_parse_mikan() -> Result<()> {
 #[test]
 fn test_parse_byrbt() -> Result<()> {
     let file = File::open("tests/it/testdata/byrbt.xml")?;
-    let content: ByrbtRSSContent = yaserde::de::from_reader(file).map_err(Error::msg)?;
 
-    let items = content
-        .channel
-        .items
-        .into_iter()
-        .map(Item::from)
-        .collect::<Vec<_>>();
+    let items = Byrbt::parse_items(BufReader::new(file))?;
 
     let expected = vec![
         Item {
@@ -100,14 +93,9 @@ fn test_parse_byrbt() -> Result<()> {
 #[test]
 fn test_parse_tjubt() -> Result<()> {
     let file = File::open("tests/it/testdata/tjupt.xml")?;
-    let content: TjuptRSSContent = yaserde::de::from_reader(file).map_err(Error::msg)?;
 
-    let items = content
-        .channel
-        .items
-        .into_iter()
-        .map(Item::from)
-        .collect::<Vec<_>>();
+    let items = Tjupt::parse_items(BufReader::new(file))?;
+
     let expected = vec![Item {
         title: "[Amarcord.1973.Criterion.Collection.1080p.BluRay.x264-WiKi]".to_string(),
         pub_date: DateTime::parse_from_rfc2822("Mon, 03 May 2021 05:35:49 +0000")

@@ -12,47 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use yaserde_derive::YaDeserialize;
-use yaserde_derive::YaSerialize;
+use std::io::BufRead;
 
-#[derive(Debug, YaDeserialize, YaSerialize, Default)]
-pub struct TjuptRSSContent {
-    pub channel: Channel,
-}
+use chrono::DateTime;
+use chrono::Local;
 
-#[derive(Debug, YaDeserialize, YaSerialize, Default)]
-pub struct Channel {
-    pub language: String,
-    pub title: String,
-    pub description: String,
-    pub image: Image,
-    #[yaserde(rename = "pubDate")]
-    pub pub_date: String,
-    pub generator: String,
-    pub link: String,
-    pub copyright: String,
-    #[yaserde(rename = "item")]
-    pub items: Vec<TjuptRSSItem>,
-}
+use crate::Item;
+use crate::Result;
 
-#[derive(Debug, YaDeserialize, YaSerialize, Default)]
-pub struct Image {
-    pub url: String,
-    pub title: String,
-    pub link: String,
-    pub width: String,
-    pub height: String,
-    pub description: String,
-}
+pub struct Tjupt;
 
-#[derive(Debug, YaDeserialize, YaSerialize, Default)]
-pub struct TjuptRSSItem {
-    pub title: String,
-    pub description: String,
-    #[yaserde(rename = "pubDate")]
-    pub pub_date: String,
-    pub link: String,
-    pub guid: String,
-    pub author: String,
-    pub category: String,
+impl Tjupt {
+    pub fn parse_items<R: BufRead>(content: R) -> Result<Vec<Item>> {
+        let channel = rss::Channel::read_from(content)?;
+
+        Ok(channel
+            .items
+            .into_iter()
+            .map(|item| {
+                let date = item.pub_date.unwrap();
+                let pub_date = DateTime::parse_from_rfc2822(&date)
+                    .unwrap()
+                    .with_timezone(&Local {});
+                Item {
+                    title: item.title.unwrap(),
+                    pub_date,
+                    url: item.link.unwrap(),
+                }
+            })
+            .collect::<Vec<_>>())
+    }
 }
