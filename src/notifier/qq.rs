@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use std::sync::Arc;
+use std::time::Duration;
 
 use log::error;
 use log::info;
@@ -21,6 +22,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::source::Item;
+use crate::QQBotConfig;
 use crate::Result;
 
 #[derive(Clone)]
@@ -30,11 +32,7 @@ pub struct QQNotifier {
 
 struct Notifier {
     client: Client,
-    name: String,
-    uin: String,
-    api: String,
-    dms: Vec<u64>,
-    groups: Vec<u64>,
+    conf: QQBotConfig,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -66,33 +64,27 @@ struct Data {
 }
 
 impl Notifier {
-    pub fn new(name: String, uin: String, api: String, dms: Vec<u64>, groups: Vec<u64>) -> Self {
+    pub fn new(conf: QQBotConfig) -> Self {
         Self {
-            name,
-            uin,
             client: Client::new(),
-            api,
-            dms,
-            groups,
+            conf,
         }
     }
 }
 
 impl QQNotifier {
-    pub fn new(name: String, uin: String, api: String, dms: Vec<u64>, groups: Vec<u64>) -> Self {
+    pub fn new(conf: QQBotConfig) -> Self {
         Self {
-            inner: Arc::new(Notifier::new(name, uin, api, dms, groups)),
+            inner: Arc::new(Notifier::new(conf)),
         }
     }
 
     pub async fn notify(&self, source: &str, items: Vec<Item>) -> Result<()> {
-        let mut pm_handles = Vec::new();
-
-        {
+        let pm_handle = {
             let notifier = self.inner.clone();
             let pm_items = items.clone();
             let source = source.to_string();
-            let dms_handle = async move {
+            async move {
                 let mut msgs = Vec::with_capacity(pm_items.len() * 2);
                 for item in pm_items.iter() {
                     msgs.extend(Self::wrap_item(&notifier, &source, item));
@@ -100,17 +92,14 @@ impl QQNotifier {
                 if let Err(e) = Self::send_private_msg(&notifier, msgs).await {
                     error!("Send private msg failed: {}", e);
                 }
-            };
-            pm_handles.push(dms_handle);
-        }
+            }
+        };
 
-        let mut dm_handles = Vec::new();
-
-        {
+        let dm_handle = {
             let notifier = self.inner.clone();
             let gp_items = items;
             let source = source.to_string();
-            let groups_handle = async move {
+            async move {
                 let mut msgs = Vec::with_capacity(gp_items.len() * 2);
                 for item in gp_items.iter() {
                     msgs.extend(Self::wrap_item(&notifier, &source, item));
@@ -118,14 +107,10 @@ impl QQNotifier {
                 if let Err(e) = Self::send_group_msg(&notifier, msgs).await {
                     error!("Send group msg failed: {}", e);
                 }
-            };
-            dm_handles.push(groups_handle);
-        }
+            }
+        };
 
-        let join_dm = futures::future::join_all(dm_handles);
-        let join_pm = futures::future::join_all(pm_handles);
-
-        tokio::join!(join_dm, join_pm);
+        tokio::join!(pm_handle, dm_handle);
 
         Ok(())
     }
@@ -135,16 +120,16 @@ impl QQNotifier {
             Message {
                 msg_type: "node".to_string(),
                 data: Data {
-                    sender_name: notifier.name.clone(),
-                    sender_uin: notifier.uin.clone(),
+                    sender_name: notifier.conf.name.clone(),
+                    sender_uin: notifier.conf.uin.clone(),
                     content: format!("{}:\n{} ({})", source, item.title, item.pub_date),
                 },
             },
             Message {
                 msg_type: "node".to_string(),
                 data: Data {
-                    sender_name: notifier.name.clone(),
-                    sender_uin: notifier.uin.clone(),
+                    sender_name: notifier.conf.name.clone(),
+                    sender_uin: notifier.conf.uin.clone(),
                     content: item.url.clone(),
                 },
             },
@@ -152,28 +137,30 @@ impl QQNotifier {
     }
 
     async fn send_private_msg(notifier: &Notifier, msg: Vec<Message>) -> Result<()> {
-        let url = format!("{}/send_private_forward_msg", notifier.api);
+        let url = format!("{}/send_private_forward_msg", notifier.conf.api);
 
-        for user_id in notifier.dms.iter() {
+        for user_id in notifier.conf.dms.iter() {
             let body = PrivateMsg {
                 user_id: *user_id,
                 messages: msg.clone(),
             };
             notifier.client.post(url.clone()).json(&body).send().await?;
             info!("Notified user {}", user_id);
+            tokio::time::sleep(Duration::from_micros(notifier.conf.delay)).await;
         }
         Ok(())
     }
 
     async fn send_group_msg(notifier: &Notifier, msg: Vec<Message>) -> Result<()> {
-        let url = format!("{}/send_group_forward_msg", notifier.api);
-        for group_id in notifier.groups.iter() {
+        let url = format!("{}/send_group_forward_msg", notifier.conf.api);
+        for group_id in notifier.conf.groups.iter() {
             let body = GroupMsg {
                 group_id: *group_id,
                 messages: msg.clone(),
             };
             notifier.client.post(url.clone()).json(&body).send().await?;
             info!("Notified group {}", group_id);
+            tokio::time::sleep(Duration::from_micros(notifier.conf.delay)).await;
         }
         Ok(())
     }
