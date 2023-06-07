@@ -15,11 +15,10 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use anyhow::Error;
 use reqwest::Client;
 use reqwest::Proxy;
 
-use super::item::MikanRSSContent;
+use super::Mikan;
 use crate::source::Item;
 use crate::source::Source;
 use crate::source::SourcePtr;
@@ -63,15 +62,8 @@ impl Source for MikanSource {
     }
 
     async fn pull_items(&self) -> Result<Vec<Item>> {
-        let content = self.client.get(&self.rss).send().await?.text().await?;
-        let content: MikanRSSContent = yaserde::de::from_str(&content).map_err(Error::msg)?;
-
-        Ok(content
-            .channel
-            .items
-            .into_iter()
-            .map(Item::from)
-            .collect::<Vec<_>>())
+        let content = self.client.get(&self.rss).send().await?.bytes().await?;
+        Mikan::parse_items(&content[..])
     }
 
     async fn check_connection(&self) -> Result<()> {

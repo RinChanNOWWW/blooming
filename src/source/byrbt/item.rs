@@ -12,52 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use yaserde_derive::YaDeserialize;
-use yaserde_derive::YaSerialize;
+use std::io::BufRead;
 
-#[derive(Debug, YaDeserialize, YaSerialize, Default)]
-pub struct ByrbtRSSContent {
-    pub channel: Channel,
-}
+use chrono::DateTime;
+use chrono::Local;
 
-#[derive(Debug, YaDeserialize, YaSerialize, Default)]
-pub struct Channel {
-    pub title: String,
-    pub link: String,
-    pub description: String,
-    pub language: String,
-    pub copyright: String,
-    #[yaserde(rename = "managingEditor")]
-    pub managing_editor: String,
-    #[yaserde(rename = "webMaster")]
-    pub web_master: String,
-    #[yaserde(rename = "pubDate")]
-    pub pub_date: String,
-    pub generator: String,
-    pub docs: String,
-    #[yaserde(rename = "item")]
-    pub items: Vec<ByrbtRSSItem>,
-}
+use crate::Item;
+use crate::Result;
 
-#[derive(Debug, YaDeserialize, YaSerialize, Default)]
-pub struct Image {
-    pub url: String,
-    pub title: String,
-    pub link: String,
-    pub width: String,
-    pub height: String,
-    pub description: String,
-}
+pub struct Byrbt;
 
-#[derive(Debug, YaDeserialize, YaSerialize, Default)]
-pub struct ByrbtRSSItem {
-    pub title: String,
-    pub link: String,
-    pub description: String,
-    pub author: String,
-    pub category: String,
-    pub comments: String,
-    pub guid: String,
-    #[yaserde(rename = "pubDate")]
-    pub pub_date: String,
+impl Byrbt {
+    pub fn parse_items<R: BufRead>(content: R) -> Result<Vec<Item>> {
+        let channel = rss::Channel::read_from(content)?;
+
+        Ok(channel
+            .items
+            .into_iter()
+            .map(|item| {
+                println!("{:?}", item);
+                let date = item.pub_date.unwrap();
+                let pub_date = DateTime::parse_from_rfc2822(&date)
+                    .unwrap()
+                    .with_timezone(&Local {});
+                Item {
+                    title: item.title.unwrap(),
+                    pub_date,
+                    url: item.link.unwrap(),
+                }
+            })
+            .collect::<Vec<_>>())
+    }
 }

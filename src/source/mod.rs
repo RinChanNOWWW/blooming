@@ -21,12 +21,12 @@ mod tjupt;
 use std::sync::Arc;
 use std::time::Duration;
 
-pub use byrbt::ByrbtRSSContent;
+pub use byrbt::Byrbt;
 pub use factory::register;
 pub use factory::SourceFactory;
 pub use item::Item;
-pub use mikan::MikanRSSContent;
-pub use tjupt::TjuptRSSContent;
+pub use mikan::Mikan;
+pub use tjupt::Tjupt;
 
 use crate::Result;
 

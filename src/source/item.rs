@@ -15,52 +15,10 @@
 use chrono::DateTime;
 use chrono::Local;
 
-use super::byrbt::ByrbtRSSItem;
-use super::mikan::MikanRSSItem;
-use super::tjupt::TjuptRSSItem;
-
 #[derive(Clone, Debug, PartialEq)]
 pub struct Item {
     pub title: String,
     /// Torrent download url.
     pub url: String,
     pub pub_date: DateTime<Local>,
-}
-
-impl From<MikanRSSItem> for Item {
-    fn from(item: MikanRSSItem) -> Self {
-        let mut date = item.torrent.pub_date.clone();
-        date.push_str("+08:00");
-        let pub_date = DateTime::parse_from_rfc3339(&date).unwrap();
-        let pub_date = pub_date.with_timezone(&Local {});
-        Item {
-            title: item.title,
-            pub_date,
-            url: item.enclosure.url,
-        }
-    }
-}
-
-impl From<ByrbtRSSItem> for Item {
-    fn from(item: ByrbtRSSItem) -> Self {
-        let pub_date = DateTime::parse_from_rfc2822(&item.pub_date).unwrap();
-        let pub_date = pub_date.with_timezone(&Local {});
-        Item {
-            title: item.title,
-            pub_date,
-            url: item.link,
-        }
-    }
-}
-
-impl From<TjuptRSSItem> for Item {
-    fn from(item: TjuptRSSItem) -> Self {
-        let pub_date = DateTime::parse_from_rfc2822(&item.pub_date).unwrap();
-        let pub_date = pub_date.with_timezone(&Local {});
-        Item {
-            title: item.title,
-            pub_date,
-            url: item.link,
-        }
-    }
 }

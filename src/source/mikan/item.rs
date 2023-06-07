@@ -12,49 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use yaserde_derive::YaDeserialize;
-use yaserde_derive::YaSerialize;
+use std::io::BufRead;
 
-#[derive(Debug, YaDeserialize, Default)]
-pub struct MikanRSSContent {
-    pub channel: Channel,
-}
+use chrono::DateTime;
+use chrono::Local;
 
-#[derive(Debug, YaDeserialize, YaSerialize, Default)]
-pub struct Channel {
-    pub title: String,
-    pub link: String,
-    pub description: String,
-    #[yaserde(rename = "item")]
-    pub items: Vec<MikanRSSItem>,
-}
+use crate::Item;
+use crate::Result;
 
-#[derive(Debug, YaDeserialize, YaSerialize, Default)]
-pub struct MikanRSSItem {
-    pub guid: String,
-    pub link: String,
-    pub title: String,
-    pub description: String,
-    pub torrent: Torrent,
-    pub enclosure: Enclosure,
-}
+pub struct Mikan;
 
-#[derive(Debug, YaDeserialize, YaSerialize, Default)]
-#[yaserde(namespace = "https://mikanani.me/0.1/")]
-pub struct Torrent {
-    pub link: String,
-    #[yaserde(rename = "contentLength")]
-    pub content_length: String,
-    #[yaserde(rename = "pubDate")]
-    pub pub_date: String,
-}
+impl Mikan {
+    pub fn parse_items<R: BufRead>(content: R) -> Result<Vec<Item>> {
+        let channel = rss::Channel::read_from(content)?;
 
-#[derive(Debug, YaDeserialize, YaSerialize, Default)]
-pub struct Enclosure {
-    #[yaserde(attribute, rename = "type")]
-    pub e_type: String,
-    #[yaserde(attribute)]
-    pub length: String,
-    #[yaserde(attribute)]
-    pub url: String,
+        Ok(channel
+            .items
+            .into_iter()
+            .map(|item| {
+                let mut date = item.torrent.unwrap().pub_date.unwrap();
+                date.push_str("+08:00");
+                let pub_date = DateTime::parse_from_rfc3339(&date)
+                    .unwrap()
+                    .with_timezone(&Local {});
+                Item {
+                    title: item.title.unwrap(),
+                    pub_date,
+                    url: item.enclosure.unwrap().url,
+                }
+            })
+            .collect::<Vec<_>>())
+    }
 }
