@@ -30,7 +30,6 @@ impl Byrbt {
             .items
             .into_iter()
             .map(|item| {
-                println!("{:?}", item);
                 let date = item.pub_date.unwrap();
                 let pub_date = DateTime::parse_from_rfc2822(&date)
                     .unwrap()
