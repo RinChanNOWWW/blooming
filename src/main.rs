@@ -94,8 +94,7 @@ async fn run(source: SourcePtr, notifier: Arc<QQNotifier>) {
                 });
 
                 // notify by qq bot
-                let note = || async { notifier.notify(&source.name(), new_items.clone()).await };
-                note.retry(&retry_config).await?;
+                notifier.notify(&source.name(), new_items.clone()).await?;
             }
         };
 
