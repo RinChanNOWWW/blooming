@@ -19,6 +19,8 @@ use std::fs::File;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use backon::ConstantBuilder;
+use backon::Retryable;
 use blooming::notifier;
 use blooming::source::register;
 use blooming::source::SourceFactory;
@@ -71,12 +73,14 @@ async fn run(source: SourcePtr, notifier: Arc<QQNotifier>) {
 
     let mut last_update = Local::now();
     let interval = source.interval();
+    let retry_config = ConstantBuilder::default();
 
     loop {
         tokio::time::sleep(interval).await;
 
         let result: Result<()> = try {
-            let items = source.pull_items().await?;
+            let fetch = || async { source.pull_items().await };
+            let items = fetch.retry(&retry_config).await?;
             let new_items = items
                 .into_iter()
                 .filter(|item| item.pub_date > last_update)
@@ -90,7 +94,8 @@ async fn run(source: SourcePtr, notifier: Arc<QQNotifier>) {
                 });
 
                 // notify by qq bot
-                notifier.notify(&source.name(), new_items).await?;
+                let note = || async { notifier.notify(&source.name(), new_items.clone()).await };
+                note.retry(&retry_config).await?;
             }
         };
 
@@ -102,7 +107,7 @@ async fn run(source: SourcePtr, notifier: Arc<QQNotifier>) {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    pretty_env_logger::init();
+    sensible_env_logger::init_timed_local!();
 
     let args = ClapConfig::parse();
 
