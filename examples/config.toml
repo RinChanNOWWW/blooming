@@ -20,3 +20,4 @@ api = "http://localhost:8000"
 dms = [114514, 1919810]
 groups = [114514, 1919810]
 delay = 200
+with_torrent = true
