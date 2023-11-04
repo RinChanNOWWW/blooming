@@ -34,6 +34,8 @@ pub struct QQBotConfig {
     pub groups: Vec<u64>,
     /// The delay between two messages. (ms)
     pub delay: u64,
+    /// If the message contains torrents' URLs.
+    pub with_torrent: bool,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]

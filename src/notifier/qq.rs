@@ -116,24 +116,25 @@ impl QQNotifier {
     }
 
     fn wrap_item(notifier: &Notifier, source: &str, item: &Item) -> Vec<Message> {
-        vec![
-            Message {
-                msg_type: "node".to_string(),
-                data: Data {
-                    sender_name: notifier.conf.name.clone(),
-                    sender_uin: notifier.conf.uin.clone(),
-                    content: format!("{}:\n{} ({})", source, item.title, item.pub_date),
-                },
+        let mut messages = vec![Message {
+            msg_type: "node".to_string(),
+            data: Data {
+                sender_name: notifier.conf.name.clone(),
+                sender_uin: notifier.conf.uin.clone(),
+                content: format!("{}:\n{} ({})", source, item.title, item.pub_date),
             },
-            Message {
+        }];
+        if notifier.conf.with_torrent {
+            messages.push(Message {
                 msg_type: "node".to_string(),
                 data: Data {
                     sender_name: notifier.conf.name.clone(),
                     sender_uin: notifier.conf.uin.clone(),
                     content: item.url.clone(),
                 },
-            },
-        ]
+            });
+        }
+        messages
     }
 
     async fn send_private_msg(notifier: &Notifier, msg: Vec<Message>) -> Result<()> {
