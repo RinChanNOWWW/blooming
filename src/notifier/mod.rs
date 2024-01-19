@@ -14,4 +14,12 @@
 
 mod qq;
 
-pub use qq::*;
+pub use qq::QQNotifier;
+
+use crate::source::Item;
+use crate::Result;
+
+#[async_trait::async_trait]
+pub trait Notifier: Sync + Send + Clone {
+    async fn notify(&mut self, source: &str, items: Vec<Item>) -> Result<()>;
+}
