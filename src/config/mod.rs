@@ -38,11 +38,26 @@ pub struct QQBotConfig {
     pub with_torrent: bool,
 }
 
+#[derive(Debug, Default, Serialize, Deserialize, Clone)]
+#[serde(default)]
+pub struct QQGuildBotConfig {
+    /// The app id of the bot.
+    pub app_id: String,
+    /// The app secret of the bot.
+    pub app_secret: String,
+    /// The channel id of the channel to notify.
+    pub channel_id: String,
+    /// If use sandbox API.
+    pub sandbox: bool,
+}
+
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Config {
     /// config of qq bot.
-    pub qq: QQBotConfig,
+    pub qq: Option<QQBotConfig>,
+    /// config of qq guild bot.
+    pub qq_guild: Option<QQGuildBotConfig>,
     /// mikan
     pub mikan: Option<MikanConfig>,
     /// byrbt

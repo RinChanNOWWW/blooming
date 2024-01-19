@@ -13,5 +13,15 @@
 // limitations under the License.
 
 mod qq;
+mod qq_guild;
 
-pub use qq::*;
+pub use qq::QQNotifier;
+pub use qq_guild::QQGuildNotifier;
+
+use crate::source::Item;
+use crate::Result;
+
+#[async_trait::async_trait]
+pub trait Notifier: Sync + Send + Clone {
+    async fn notify(&mut self, source: &str, items: Vec<Item>) -> Result<()>;
+}

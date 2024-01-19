@@ -12,25 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::sync::Arc;
 use std::time::Duration;
 
 use log::error;
-use log::info;
 use reqwest::Client;
 use serde::Deserialize;
 use serde::Serialize;
 
 use crate::source::Item;
+use crate::Notifier;
 use crate::QQBotConfig;
 use crate::Result;
 
 #[derive(Clone)]
 pub struct QQNotifier {
-    inner: Arc<Notifier>,
-}
-
-struct Notifier {
     client: Client,
     conf: QQBotConfig,
 }
@@ -63,48 +58,39 @@ struct Data {
     content: String,
 }
 
-impl Notifier {
-    pub fn new(conf: QQBotConfig) -> Self {
-        Self {
-            client: Client::new(),
-            conf,
-        }
-    }
-}
-
-impl QQNotifier {
-    pub fn new(conf: QQBotConfig) -> Self {
-        Self {
-            inner: Arc::new(Notifier::new(conf)),
-        }
-    }
-
-    pub async fn notify(&self, source: &str, items: Vec<Item>) -> Result<()> {
+#[async_trait::async_trait]
+impl Notifier for QQNotifier {
+    async fn notify(&mut self, source: &str, items: Vec<Item>) -> Result<()> {
+        let delay = self.conf.delay;
         let pm_handle = {
-            let notifier = self.inner.clone();
+            let client = self.client.clone();
             let pm_items = items.clone();
             let source = source.to_string();
+            let mut msgs = Vec::with_capacity(pm_items.len() * 2);
+            for item in pm_items.iter() {
+                msgs.extend(self.messages(&source, item));
+            }
+            let msgs = self.private_messages(msgs);
+            let url = format!("{}/send_private_forward_msg", self.conf.api);
             async move {
-                let mut msgs = Vec::with_capacity(pm_items.len() * 2);
-                for item in pm_items.iter() {
-                    msgs.extend(Self::wrap_item(&notifier, &source, item));
-                }
-                if let Err(e) = Self::send_private_msg(&notifier, msgs).await {
+                if let Err(e) = Self::send_messages(client, &url, msgs, delay).await {
                     error!("Send private msg failed: {}", e);
                 }
             }
         };
 
         let dm_handle = {
-            let notifier = self.inner.clone();
+            let client = self.client.clone();
             let gp_items = items;
             let source = source.to_string();
+            let mut msgs = Vec::with_capacity(gp_items.len() * 2);
+            for item in gp_items.iter() {
+                msgs.extend(self.messages(&source, item));
+            }
+            let msgs = self.group_messages(msgs);
+            let url = format!("{}/send_group_forward_msg", self.conf.api);
             async move {
-                let mut msgs = Vec::with_capacity(gp_items.len() * 2);
-                for item in gp_items.iter() {
-                    msgs.extend(Self::wrap_item(&notifier, &source, item));
-                }
-                if let Err(e) = Self::send_group_msg(&notifier, msgs).await {
+                if let Err(e) = Self::send_messages(client, &url, msgs, delay).await {
                     error!("Send group msg failed: {}", e);
                 }
             }
@@ -114,22 +100,28 @@ impl QQNotifier {
 
         Ok(())
     }
+}
 
-    fn wrap_item(notifier: &Notifier, source: &str, item: &Item) -> Vec<Message> {
+impl QQNotifier {
+    pub fn new(client: Client, conf: QQBotConfig) -> Self {
+        Self { client, conf }
+    }
+
+    fn messages(&self, source: &str, item: &Item) -> Vec<Message> {
         let mut messages = vec![Message {
             msg_type: "node".to_string(),
             data: Data {
-                sender_name: notifier.conf.name.clone(),
-                sender_uin: notifier.conf.uin.clone(),
+                sender_name: self.conf.name.clone(),
+                sender_uin: self.conf.uin.clone(),
                 content: format!("{}:\n{} ({})", source, item.title, item.pub_date),
             },
         }];
-        if notifier.conf.with_torrent {
+        if self.conf.with_torrent {
             messages.push(Message {
                 msg_type: "node".to_string(),
                 data: Data {
-                    sender_name: notifier.conf.name.clone(),
-                    sender_uin: notifier.conf.uin.clone(),
+                    sender_name: self.conf.name.clone(),
+                    sender_uin: self.conf.uin.clone(),
                     content: item.url.clone(),
                 },
             });
@@ -137,31 +129,37 @@ impl QQNotifier {
         messages
     }
 
-    async fn send_private_msg(notifier: &Notifier, msg: Vec<Message>) -> Result<()> {
-        let url = format!("{}/send_private_forward_msg", notifier.conf.api);
-
-        for user_id in notifier.conf.dms.iter() {
-            let body = PrivateMsg {
+    fn private_messages(&self, msg: Vec<Message>) -> Vec<PrivateMsg> {
+        let mut msgs = Vec::with_capacity(self.conf.dms.len());
+        for user_id in self.conf.dms.iter() {
+            msgs.push(PrivateMsg {
                 user_id: *user_id,
                 messages: msg.clone(),
-            };
-            notifier.client.post(url.clone()).json(&body).send().await?;
-            info!("Notified user {}", user_id);
-            tokio::time::sleep(Duration::from_micros(notifier.conf.delay)).await;
+            });
         }
-        Ok(())
+        msgs
     }
 
-    async fn send_group_msg(notifier: &Notifier, msg: Vec<Message>) -> Result<()> {
-        let url = format!("{}/send_group_forward_msg", notifier.conf.api);
-        for group_id in notifier.conf.groups.iter() {
-            let body = GroupMsg {
+    fn group_messages(&self, msg: Vec<Message>) -> Vec<GroupMsg> {
+        let mut msgs = Vec::with_capacity(self.conf.groups.len());
+        for group_id in self.conf.groups.iter() {
+            msgs.push(GroupMsg {
                 group_id: *group_id,
                 messages: msg.clone(),
-            };
-            notifier.client.post(url.clone()).json(&body).send().await?;
-            info!("Notified group {}", group_id);
-            tokio::time::sleep(Duration::from_micros(notifier.conf.delay)).await;
+            });
+        }
+        msgs
+    }
+
+    async fn send_messages<T: Serialize>(
+        client: Client,
+        url: &str,
+        msgs: Vec<T>,
+        delay: u64,
+    ) -> Result<()> {
+        for msg in msgs.iter() {
+            client.post(url).json(msg).send().await?;
+            tokio::time::sleep(Duration::from_micros(delay)).await;
         }
         Ok(())
     }

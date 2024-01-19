@@ -17,7 +17,6 @@
 use std::env::current_dir;
 use std::fs::File;
 use std::path::PathBuf;
-use std::sync::Arc;
 
 use backon::ConstantBuilder;
 use backon::Retryable;
@@ -27,6 +26,8 @@ use blooming::source::SourceFactory;
 use blooming::source::SourcePtr;
 use blooming::ClapConfig;
 use blooming::Config;
+use blooming::Notifier;
+use blooming::QQGuildNotifier;
 use blooming::QQNotifier;
 use blooming::Result;
 use chrono::Local;
@@ -34,21 +35,35 @@ use clap::Parser;
 use daemonize::Daemonize;
 use log::error;
 use log::info;
+use reqwest::Client;
+use tokio::task::JoinHandle;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 async fn main_impl(config: Config) -> Result<()> {
-    let notifier = notifier::QQNotifier::new(config.qq.clone());
-
     let mut factory = SourceFactory::default();
     register(&mut factory, &config)?;
 
-    activate_sources(factory, Arc::new(notifier)).await
+    let client = Client::new();
+    let mut handles = Vec::new();
+
+    if let Some(qq) = config.qq.clone() {
+        let notifier = notifier::QQNotifier::new(client.clone(), qq);
+        handles.extend(activate_qq_notifier(&factory, notifier));
+    }
+    if let Some(qq_guild) = config.qq_guild.clone() {
+        let notifier = notifier::QQGuildNotifier::new(client, qq_guild);
+        handles.extend(activate_qq_guild_notifier(&factory, notifier));
+    }
+
+    futures::future::join_all(handles).await;
+
+    Ok(())
 }
 
-async fn activate_sources(factory: SourceFactory, notifier: Arc<QQNotifier>) -> Result<()> {
+fn activate_qq_notifier(factory: &SourceFactory, notifier: QQNotifier) -> Vec<JoinHandle<()>> {
     let sources = factory.sources();
-    let handles = sources
+    sources
         .iter()
         .map(|source| {
             let source = source.clone();
@@ -57,14 +72,27 @@ async fn activate_sources(factory: SourceFactory, notifier: Arc<QQNotifier>) -> 
                 run(source, n).await;
             })
         })
-        .collect::<Vec<_>>();
-
-    futures::future::join_all(handles).await;
-
-    Ok(())
+        .collect::<Vec<_>>()
 }
 
-async fn run(source: SourcePtr, notifier: Arc<QQNotifier>) {
+fn activate_qq_guild_notifier(
+    factory: &SourceFactory,
+    notifier: QQGuildNotifier,
+) -> Vec<JoinHandle<()>> {
+    let sources = factory.sources();
+    sources
+        .iter()
+        .map(|source| {
+            let source = source.clone();
+            let n = notifier.clone();
+            tokio::spawn(async move {
+                run(source, n).await;
+            })
+        })
+        .collect::<Vec<_>>()
+}
+
+async fn run<T: Notifier>(source: SourcePtr, mut notifier: T) {
     if source.check_connection().await.is_err() {
         error!("Check connection of '{}' failed", source.name());
     } else {
@@ -93,7 +121,7 @@ async fn run(source: SourcePtr, notifier: Arc<QQNotifier>) {
                     if pub_time > acc { pub_time } else { acc }
                 });
 
-                // notify by qq bot
+                // notify
                 notifier.notify(&source.name(), new_items.clone()).await?;
             }
         };
