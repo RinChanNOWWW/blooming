@@ -21,3 +21,9 @@ dms = [114514, 1919810]
 groups = [114514, 1919810]
 delay = 200
 with_torrent = true
+
+[qq_guild]
+app_id = "app id"
+app_secret = "app secret"
+channel_id = "channel id"
+sandbox = true

@@ -13,8 +13,10 @@
 // limitations under the License.
 
 mod qq;
+mod qq_guild;
 
 pub use qq::QQNotifier;
+pub use qq_guild::QQGuildNotifier;
 
 use crate::source::Item;
 use crate::Result;

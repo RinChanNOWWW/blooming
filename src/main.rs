@@ -27,6 +27,7 @@ use blooming::source::SourcePtr;
 use blooming::ClapConfig;
 use blooming::Config;
 use blooming::Notifier;
+use blooming::QQGuildNotifier;
 use blooming::QQNotifier;
 use blooming::Result;
 use chrono::Local;
@@ -50,6 +51,10 @@ async fn main_impl(config: Config) -> Result<()> {
         let notifier = notifier::QQNotifier::new(client.clone(), qq);
         handles.extend(activate_qq_notifier(&factory, notifier));
     }
+    if let Some(qq_guild) = config.qq_guild.clone() {
+        let notifier = notifier::QQGuildNotifier::new(client, qq_guild);
+        handles.extend(activate_qq_guild_notifier(&factory, notifier));
+    }
 
     futures::future::join_all(handles).await;
 
@@ -57,6 +62,23 @@ async fn main_impl(config: Config) -> Result<()> {
 }
 
 fn activate_qq_notifier(factory: &SourceFactory, notifier: QQNotifier) -> Vec<JoinHandle<()>> {
+    let sources = factory.sources();
+    sources
+        .iter()
+        .map(|source| {
+            let source = source.clone();
+            let n = notifier.clone();
+            tokio::spawn(async move {
+                run(source, n).await;
+            })
+        })
+        .collect::<Vec<_>>()
+}
+
+fn activate_qq_guild_notifier(
+    factory: &SourceFactory,
+    notifier: QQGuildNotifier,
+) -> Vec<JoinHandle<()>> {
     let sources = factory.sources();
     sources
         .iter()
