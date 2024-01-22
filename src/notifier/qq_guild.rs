@@ -92,6 +92,10 @@ impl Notifier for QQGuildNotifier {
         }
         Ok(())
     }
+
+    fn num_items_each_notify(&self) -> usize {
+        5
+    }
 }
 
 impl QQGuildNotifier {

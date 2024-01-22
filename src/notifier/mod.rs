@@ -24,4 +24,11 @@ use crate::Result;
 #[async_trait::async_trait]
 pub trait Notifier: Sync + Send + Clone {
     async fn notify(&mut self, source: &str, items: Vec<Item>) -> Result<()>;
+
+    /// The number of items to be notified each time.
+    ///
+    /// If it is 0, all items will be notified at once.
+    fn num_items_each_notify(&self) -> usize {
+        0
+    }
 }

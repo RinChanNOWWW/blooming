@@ -102,6 +102,7 @@ async fn run<T: Notifier>(source: SourcePtr, mut notifier: T) {
     let mut last_update = Local::now();
     let interval = source.interval();
     let retry_config = ConstantBuilder::default();
+    let each_notify = notifier.num_items_each_notify();
 
     loop {
         tokio::time::sleep(interval).await;
@@ -122,7 +123,13 @@ async fn run<T: Notifier>(source: SourcePtr, mut notifier: T) {
                 });
 
                 // notify
-                notifier.notify(&source.name(), new_items.clone()).await?;
+                if each_notify == 0 {
+                    notifier.notify(&source.name(), new_items.clone()).await?;
+                } else {
+                    for chunk in new_items.chunks(each_notify) {
+                        notifier.notify(&source.name(), chunk.to_vec()).await?;
+                    }
+                }
             }
         };
 
