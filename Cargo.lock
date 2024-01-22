@@ -104,7 +104,7 @@ dependencies = [
  "futures",
  "log",
  "reqwest",
- "rss",
+ "rss-for-mikan",
  "sensible-env-logger",
  "serde",
  "serfig",
@@ -977,9 +977,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "rss"
-version = "2.0.4"
-source = "git+https://github.com/RinChanNOWWW/rss?branch=patch-mikan#59380e0ce4c40ad660cec77a367b47fe41b612e6"
+name = "rss-for-mikan"
+version = "2.0.4-mikan"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0e15eea7f8247e7acc5843eaac7275f988950991eab7eadce866691e92ebf8c1"
 dependencies = [
  "atom_syndication",
  "derive_builder",

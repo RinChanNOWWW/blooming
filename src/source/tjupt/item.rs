@@ -24,7 +24,7 @@ pub struct Tjupt;
 
 impl Tjupt {
     pub fn parse_items<R: BufRead>(content: R) -> Result<Vec<Item>> {
-        let channel = rss::Channel::read_from(content)?;
+        let channel = rss_for_mikan::Channel::read_from(content)?;
 
         Ok(channel
             .items
