@@ -13,7 +13,7 @@ interval = 500
 rsses = ["https://www.tjupt.org/torrentrss.php?rows=10&cat402=1&icat=1&ismalldescr=1&isize=1&iuplder=1&passkey="]
 interval = 500
 
-[qq]
+[cqhttp]
 name = "BOT"
 uin = "123456789"
 api = "http://localhost:8000"
@@ -22,7 +22,7 @@ groups = [114514, 1919810]
 delay = 200
 with_torrent = true
 
-[qq_guild]
+[qq]
 app_id = "app id"
 app_secret = "app secret"
 channel_id = "channel id"

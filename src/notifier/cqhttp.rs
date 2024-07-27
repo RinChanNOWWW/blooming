@@ -20,14 +20,14 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::source::Item;
+use crate::CQHTTPBotConfig;
 use crate::Notifier;
-use crate::QQBotConfig;
 use crate::Result;
 
 #[derive(Clone)]
 pub struct CQHTTPNotifier {
     client: Client,
-    conf: QQBotConfig,
+    conf: CQHTTPBotConfig,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -103,7 +103,7 @@ impl Notifier for CQHTTPNotifier {
 }
 
 impl CQHTTPNotifier {
-    pub fn new(client: Client, conf: QQBotConfig) -> Self {
+    pub fn new(client: Client, conf: CQHTTPBotConfig) -> Self {
         Self { client, conf }
     }
 

@@ -47,13 +47,13 @@ async fn main_impl(config: Config) -> Result<()> {
     let client = Client::new();
     let mut handles = Vec::new();
 
-    if let Some(qq) = config.qq.clone() {
-        let notifier = notifier::CQHTTPNotifier::new(client.clone(), qq);
-        handles.extend(activate_qq_notifier(&factory, notifier));
+    if let Some(cqhttp) = config.cqhttp.clone() {
+        let notifier = notifier::CQHTTPNotifier::new(client.clone(), cqhttp);
+        handles.extend(activate_cqhttp_notifier(&factory, notifier));
     }
-    if let Some(qq_guild) = config.qq_guild.clone() {
-        let notifier = notifier::QQNotifier::new(client, qq_guild);
-        handles.extend(activate_qq_guild_notifier(&factory, notifier));
+    if let Some(qq) = config.qq.clone() {
+        let notifier = notifier::QQNotifier::new(client, qq);
+        handles.extend(activate_qq_notifier(&factory, notifier));
     }
 
     futures::future::join_all(handles).await;
@@ -61,7 +61,10 @@ async fn main_impl(config: Config) -> Result<()> {
     Ok(())
 }
 
-fn activate_qq_notifier(factory: &SourceFactory, notifier: CQHTTPNotifier) -> Vec<JoinHandle<()>> {
+fn activate_cqhttp_notifier(
+    factory: &SourceFactory,
+    notifier: CQHTTPNotifier,
+) -> Vec<JoinHandle<()>> {
     let sources = factory.sources();
     sources
         .iter()
@@ -75,10 +78,7 @@ fn activate_qq_notifier(factory: &SourceFactory, notifier: CQHTTPNotifier) -> Ve
         .collect::<Vec<_>>()
 }
 
-fn activate_qq_guild_notifier(
-    factory: &SourceFactory,
-    notifier: QQNotifier,
-) -> Vec<JoinHandle<()>> {
+fn activate_qq_notifier(factory: &SourceFactory, notifier: QQNotifier) -> Vec<JoinHandle<()>> {
     let sources = factory.sources();
     sources
         .iter()
@@ -106,7 +106,7 @@ async fn run<T: Notifier>(source: SourcePtr, mut notifier: T) {
 
     loop {
         tokio::time::sleep(interval).await;
-
+        let mut time_to_update = last_update;
         let result: Result<()> = try {
             let fetch = || async { source.pull_items().await };
             let items = fetch.retry(&retry_config).await?;
@@ -117,7 +117,7 @@ async fn run<T: Notifier>(source: SourcePtr, mut notifier: T) {
 
             if !new_items.is_empty() {
                 // update the time marker
-                last_update = new_items.iter().fold(new_items[0].pub_date, |acc, item| {
+                time_to_update = new_items.iter().fold(new_items[0].pub_date, |acc, item| {
                     let pub_time = item.pub_date;
                     if pub_time > acc { pub_time } else { acc }
                 });
@@ -135,6 +135,8 @@ async fn run<T: Notifier>(source: SourcePtr, mut notifier: T) {
 
         if let Err(e) = result {
             error!("{}", e);
+        } else {
+            last_update = time_to_update;
         }
     }
 }

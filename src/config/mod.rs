@@ -21,7 +21,7 @@ use crate::Result;
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone)]
 #[serde(default)]
-pub struct QQBotConfig {
+pub struct CQHTTPBotConfig {
     /// The name of the bot.
     pub name: String,
     /// The uin (QQ number) of the bot.
@@ -40,7 +40,7 @@ pub struct QQBotConfig {
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone)]
 #[serde(default)]
-pub struct QQGuildBotConfig {
+pub struct QQBotConfig {
     /// The app id of the bot.
     pub app_id: String,
     /// The app secret of the bot.
@@ -55,9 +55,9 @@ pub struct QQGuildBotConfig {
 #[serde(default)]
 pub struct Config {
     /// config of qq bot.
-    pub qq: Option<QQBotConfig>,
+    pub cqhttp: Option<CQHTTPBotConfig>,
     /// config of qq guild bot.
-    pub qq_guild: Option<QQGuildBotConfig>,
+    pub qq: Option<QQBotConfig>,
     /// mikan
     pub mikan: Option<MikanConfig>,
     /// byrbt

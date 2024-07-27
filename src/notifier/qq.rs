@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use log::info;
 use reqwest::Client;
 use reqwest::Response;
 use serde::Deserialize;
@@ -19,7 +20,7 @@ use serde::Serialize;
 
 use crate::source::Item;
 use crate::Notifier;
-use crate::QQGuildBotConfig;
+use crate::QQBotConfig;
 use crate::Result;
 
 const API_GET_ACCESS_TOKEN: &str = "https://bots.qq.com/app/getAppAccessToken";
@@ -31,7 +32,7 @@ const CODE_TOKEN_EXPIRED: i32 = 11244;
 #[derive(Clone)]
 pub struct QQNotifier {
     client: Client,
-    conf: QQGuildBotConfig,
+    conf: QQBotConfig,
 
     api: String,
     access_token: String,
@@ -64,6 +65,24 @@ struct ErrorMessage {
     trace_id: String,
 }
 
+/// Check the response status code and return whether the token is valid.
+fn check_response(resp: &Response) -> Result<bool> {
+    let status_code = resp.status().as_u16();
+    if status_code == 401 {
+        return Ok(false);
+    }
+    if status_code == 500 {
+        let err_msg = resp.json::<ErrorMessage>().await?;
+        if err_msg.code == CODE_TOKEN_EXPIRED {
+            return Ok(false);
+        } else {
+            return Err(anyhow::anyhow!(err_msg.message));
+        }
+    }
+
+    Ok(true)
+}
+
 #[async_trait::async_trait]
 impl Notifier for QQNotifier {
     async fn notify(&mut self, source: &str, items: Vec<Item>) -> Result<()> {
@@ -74,23 +93,14 @@ impl Notifier for QQNotifier {
         let msg = self.message(source, items);
 
         let resp = self.send_message(&msg).await?;
-        let status_code = resp.status().as_u16();
 
-        if status_code == 401 {
-            // Get access token and retry.
+        if check_response(&resp)? {
+            Ok(())
+        } else {
+            info!("Token invalid, need to renew it.");
             self.access_token = self.get_access_token().await?;
-            self.send_message(&msg).await?;
-        } else if status_code == 500 {
-            let err_msg = resp.json::<ErrorMessage>().await?;
-            if err_msg.code == CODE_TOKEN_EXPIRED {
-                // Get access token and retry.
-                self.access_token = self.get_access_token().await?;
-                self.send_message(&msg).await?;
-            } else {
-                return Err(anyhow::anyhow!(err_msg.message));
-            }
+            self.send_message(&msg).await
         }
-        Ok(())
     }
 
     fn num_items_each_notify(&self) -> usize {
@@ -99,7 +109,7 @@ impl Notifier for QQNotifier {
 }
 
 impl QQNotifier {
-    pub fn new(client: Client, conf: QQGuildBotConfig) -> Self {
+    pub fn new(client: Client, conf: QQBotConfig) -> Self {
         let api = if conf.sandbox {
             format!("{}/channels/{}/messages", API_BOT_SANDBOX, conf.channel_id)
         } else {
