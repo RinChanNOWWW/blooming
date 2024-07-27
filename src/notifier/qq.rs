@@ -29,7 +29,7 @@ const API_BOT_SANDBOX: &str = "https://sandbox.api.sgroup.qq.com";
 const CODE_TOKEN_EXPIRED: i32 = 11244;
 
 #[derive(Clone)]
-pub struct QQGuildNotifier {
+pub struct QQNotifier {
     client: Client,
     conf: QQGuildBotConfig,
 
@@ -65,7 +65,7 @@ struct ErrorMessage {
 }
 
 #[async_trait::async_trait]
-impl Notifier for QQGuildNotifier {
+impl Notifier for QQNotifier {
     async fn notify(&mut self, source: &str, items: Vec<Item>) -> Result<()> {
         if self.access_token.is_empty() {
             self.access_token = self.get_access_token().await?;
@@ -94,11 +94,11 @@ impl Notifier for QQGuildNotifier {
     }
 
     fn num_items_each_notify(&self) -> usize {
-        5
+        3
     }
 }
 
-impl QQGuildNotifier {
+impl QQNotifier {
     pub fn new(client: Client, conf: QQGuildBotConfig) -> Self {
         let api = if conf.sandbox {
             format!("{}/channels/{}/messages", API_BOT_SANDBOX, conf.channel_id)

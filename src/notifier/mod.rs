@@ -13,10 +13,10 @@
 // limitations under the License.
 
 mod cqhttp;
-mod qq_guild;
+mod qq;
 
 pub use cqhttp::CQHTTPNotifier;
-pub use qq_guild::QQGuildNotifier;
+pub use qq::QQNotifier;
 
 use crate::source::Item;
 use crate::Result;
