@@ -25,7 +25,7 @@ use crate::QQBotConfig;
 use crate::Result;
 
 #[derive(Clone)]
-pub struct QQNotifier {
+pub struct CQHTTPNotifier {
     client: Client,
     conf: QQBotConfig,
 }
@@ -59,7 +59,7 @@ struct Data {
 }
 
 #[async_trait::async_trait]
-impl Notifier for QQNotifier {
+impl Notifier for CQHTTPNotifier {
     async fn notify(&mut self, source: &str, items: Vec<Item>) -> Result<()> {
         let delay = self.conf.delay;
         let pm_handle = {
@@ -102,7 +102,7 @@ impl Notifier for QQNotifier {
     }
 }
 
-impl QQNotifier {
+impl CQHTTPNotifier {
     pub fn new(client: Client, conf: QQBotConfig) -> Self {
         Self { client, conf }
     }

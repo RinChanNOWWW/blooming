@@ -24,11 +24,11 @@ use blooming::notifier;
 use blooming::source::register;
 use blooming::source::SourceFactory;
 use blooming::source::SourcePtr;
+use blooming::CQHTTPNotifier;
 use blooming::ClapConfig;
 use blooming::Config;
 use blooming::Notifier;
 use blooming::QQGuildNotifier;
-use blooming::QQNotifier;
 use blooming::Result;
 use chrono::Local;
 use clap::Parser;
@@ -48,7 +48,7 @@ async fn main_impl(config: Config) -> Result<()> {
     let mut handles = Vec::new();
 
     if let Some(qq) = config.qq.clone() {
-        let notifier = notifier::QQNotifier::new(client.clone(), qq);
+        let notifier = notifier::CQHTTPNotifier::new(client.clone(), qq);
         handles.extend(activate_qq_notifier(&factory, notifier));
     }
     if let Some(qq_guild) = config.qq_guild.clone() {
@@ -61,7 +61,7 @@ async fn main_impl(config: Config) -> Result<()> {
     Ok(())
 }
 
-fn activate_qq_notifier(factory: &SourceFactory, notifier: QQNotifier) -> Vec<JoinHandle<()>> {
+fn activate_qq_notifier(factory: &SourceFactory, notifier: CQHTTPNotifier) -> Vec<JoinHandle<()>> {
     let sources = factory.sources();
     sources
         .iter()

@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod qq;
+mod cqhttp;
 mod qq_guild;
 
-pub use qq::QQNotifier;
+pub use cqhttp::CQHTTPNotifier;
 pub use qq_guild::QQGuildNotifier;
 
 use crate::source::Item;
