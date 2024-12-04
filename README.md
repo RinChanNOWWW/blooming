@@ -11,7 +11,7 @@ BT/PT 站 RSS 更新通知器。
 ## 通知方式
 
 - QQ 官方频道机器人。
-- QQ 机器人: [go-cqhttp](https://github.com/Mrs4s/go-cqhttp).
+- QQ 机器人: [NapCatQQ](https://github.com/NapNeko/NapCatQQ).
 
 ## Install
 
